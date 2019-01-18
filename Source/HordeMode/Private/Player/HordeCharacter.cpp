@@ -70,3 +70,13 @@ void AHordeCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
+
+FVector AHordeCharacter::GetPawnViewLocation() const
+{
+	if (CameraComp)
+	{
+		return CameraComp->GetComponentLocation();
+	}
+
+	return Super::GetPawnViewLocation();
+}
