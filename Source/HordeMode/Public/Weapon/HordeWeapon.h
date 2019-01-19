@@ -10,6 +10,23 @@ class USkeletalMeshComponent;
 class UDamageType;
 class UParticleSystem;
 
+// Contains information of a single hitscan weapon linetrace
+USTRUCT()
+struct FHitScanTrace
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	TEnumAsByte<EPhysicalSurface> SurfaceType;
+
+	UPROPERTY()
+	FVector_NetQuantize TraceTo;
+
+	UPROPERTY()
+	uint8 ReplicationCount;
+};
+
 UCLASS()
 class HORDEMODE_API AHordeWeapon : public AActor
 {
@@ -28,6 +45,8 @@ protected:
 
 	void PlayFireEffects(FVector TraceEnd);
 
+	void PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint);
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<UDamageType> DamageType;
 
@@ -43,14 +62,49 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	UParticleSystem* TracerEffect;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UParticleSystem* DefaultImpactEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	UParticleSystem* FleshImpactEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TSubclassOf<UCameraShake> FireCamShake;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float BaseDamage;
 
 	UFUNCTION(BlueprintCallable) // REMOVE
 	virtual void Fire();
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerFire();
+	void ServerFire_Implementation();
+	bool ServerFire_Validate();
+
+	FTimerHandle TimerHandle_TimeBetweenShots;
+
+	float LastFireTime;
+
+	/* RPM - Bullets per minute fired by weapon */
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float RateOfFire;
+
 	/* Bullet Spread in Degrees */
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon", meta = (ClampMin = 0.0f))
 	float BulletSpread;
-	
+
+	// Derived from RateOfFire
+	float TimeBetweenShots;
+
+	UPROPERTY(ReplicatedUsing = OnRep_HitScanTrace)
+	FHitScanTrace HitScanTrace;
+
+	UFUNCTION()
+	void OnRep_HitScanTrace();
+
+public:	
+	void StartFire();
+
+	void StopFire();
 };
