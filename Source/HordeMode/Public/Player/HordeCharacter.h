@@ -81,9 +81,15 @@ public:
 
 	virtual FVector GetPawnViewLocation() const override;
 
+	//////////////////////////////////////////////////////////////////////////
+	// Input handlers
+
 	UFUNCTION(BlueprintCallable, Category = "Player")
 	void StartFire();
 
 	UFUNCTION(BlueprintCallable, Category = "Player")
 	void StopFire();
+
+	/** player pressed reload action */
+	void OnReload();
 };

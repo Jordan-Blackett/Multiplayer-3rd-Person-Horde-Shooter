@@ -54,7 +54,7 @@ void AHordeCharacter::BeginPlay()
 		CurrentWeapon = GetWorld()->SpawnActor<AHordeWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 		if (CurrentWeapon)
 		{
-			CurrentWeapon->SetOwner(this);
+			CurrentWeapon->SetOwningPawn(this);
 			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
 		}
 	}
@@ -81,6 +81,8 @@ void AHordeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AHordeCharacter::StartFire);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AHordeCharacter::StopFire);
+
+	PlayerInputComponent->BindAction("Reload", IE_Released, this, &AHordeCharacter::OnReload);
 }
 
 void AHordeCharacter::MoveForward(float Value)
@@ -127,6 +129,18 @@ void AHordeCharacter::StopFire()
 	{
 		CurrentWeapon->StopFire();
 	}
+}
+
+void AHordeCharacter::OnReload()
+{
+	//AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
+	//if (MyPC && MyPC->IsGameInputAllowed())
+	//{
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->StartReload();
+		}
+	//}
 }
 
 void AHordeCharacter::OnHealthChanged(UHordeHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)

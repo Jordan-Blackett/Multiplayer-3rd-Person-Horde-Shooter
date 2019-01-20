@@ -2,6 +2,7 @@
 
 #include "HordeHealthComponent.h"
 #include "Net/UnrealNetwork.h"
+//#include "SGameMode.h"
 
 // Sets default values for this component's properties
 UHordeHealthComponent::UHordeHealthComponent()
@@ -13,6 +14,7 @@ UHordeHealthComponent::UHordeHealthComponent()
 
 	SetIsReplicated(true);
 }
+
 
 // Called when the game starts
 void UHordeHealthComponent::BeginPlay()
@@ -46,6 +48,11 @@ void UHordeHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Dama
 		return;
 	}
 
+	//if (DamageCauser != DamagedActor && IsFriendly(DamagedActor, DamageCauser))
+	//{
+	//	return;
+	//}
+
 	// Update health clamped
 	Health = FMath::Clamp(Health - Damage, 0.0f, DefaultHealth);
 
@@ -54,8 +61,56 @@ void UHordeHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Dama
 	bIsDead = Health <= 0.0f;
 
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
-}
 
+	//if (bIsDead)
+	//{
+	//	ASGameMode* GM = Cast<ASGameMode>(GetWorld()->GetAuthGameMode());
+	//	if (GM)
+	//	{
+	//		GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser, InstigatedBy);
+	//	}
+	//}
+}
+//
+//void USHealthComponent::Heal(float HealAmount)
+//{
+//	if (HealAmount <= 0.0f || Health <= 0.0f)
+//	{
+//		return;
+//	}
+//
+//	Health = FMath::Clamp(Health + HealAmount, 0.0f, DefaultHealth);
+//
+//	UE_LOG(LogTemp, Log, TEXT("Health Changed: %s (+%s)"), *FString::SanitizeFloat(Health), *FString::SanitizeFloat(HealAmount));
+//
+//	OnHealthChanged.Broadcast(this, Health, -HealAmount, nullptr, nullptr, nullptr);
+//}
+//
+//bool USHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
+//{
+//	if (ActorA == nullptr || ActorB == nullptr)
+//	{
+//		// Assume Friendly
+//		return true;
+//	}
+//
+//	USHealthComponent* HealthCompA = Cast<USHealthComponent>(ActorA->GetComponentByClass(USHealthComponent::StaticClass()));
+//	USHealthComponent* HealthCompB = Cast<USHealthComponent>(ActorB->GetComponentByClass(USHealthComponent::StaticClass()));
+//
+//	if (HealthCompA == nullptr || HealthCompB == nullptr)
+//	{
+//		// Assume friendly
+//		return true;
+//	}
+//
+//	return HealthCompA->TeamNum == HealthCompB->TeamNum;
+//}
+//
+//float USHealthComponent::GetHealth() const
+//{
+//	return Health;
+//}
+//
 void UHordeHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

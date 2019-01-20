@@ -16,7 +16,7 @@ class HORDEMODE_API AHordeWeapon_Projectile : public AHordeWeapon
 	
 protected:
 
-	virtual void Fire() override;
+	//virtual void Fire() override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	TSubclassOf<AActor> ProjectileClass;
