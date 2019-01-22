@@ -8,7 +8,6 @@
 
 class AHordeCharacter;
 class USkeletalMeshComponent;
-class UDamageType;
 class UParticleSystemComponent;
 class UParticleSystem;
 class UCameraShake;
@@ -337,14 +336,14 @@ protected:
 	/** stop playing weapon animations */
 	void StopWeaponAnimation(UAnimMontage* Animation);
 
-	///** Get the aim of the weapon, allowing for adjustments to be made by the weapon */
-	//virtual FVector GetAdjustedAim() const;
+	/** Get the aim of the weapon, allowing for adjustments to be made by the weapon */
+	virtual FVector GetAdjustedAim() const;
 
-	///** Get the aim of the camera */
-	//FVector GetCameraAim() const;
+	/** Get the aim of the camera */
+	FVector GetCameraAim() const;
 
-	///** get the originating location for camera damage */
-	//FVector GetCameraDamageStartLocation(const FVector& AimDir) const;
+	/** get the originating location for camera damage */
+	FVector GetCameraDamageStartLocation(const FVector& AimDir) const;
 
 	/** get the muzzle location of the weapon */
 	FVector GetMuzzleLocation() const;

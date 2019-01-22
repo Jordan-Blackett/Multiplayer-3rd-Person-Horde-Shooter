@@ -210,7 +210,7 @@ void AHordeWeapon::HandleFiring()
 
 		if (MyPawn && MyPawn->IsLocallyControlled())
 		{
-			//FireWeapon();
+			FireWeapon();
 
 			UseAmmo();
 
@@ -476,6 +476,37 @@ void AHordeWeapon::StopWeaponAnimation(UAnimMontage* Animation)
 	}
 }
 
+FVector AHordeWeapon::GetAdjustedAim() const
+{
+	AActor* MyOwner = GetOwner();
+	FVector FinalAim = FVector::ZeroVector;
+	if (MyOwner)
+	{
+		FVector CamLoc;
+		FRotator CamRot;
+		MyOwner->GetActorEyesViewPoint(CamLoc, CamRot);
+		FinalAim = CamRot.Vector();
+	}
+	return FinalAim;
+}
+
+FVector AHordeWeapon::GetCameraDamageStartLocation(const FVector & AimDir) const
+{
+	AActor* MyOwner = GetOwner();
+	FVector OutStartTrace = FVector::ZeroVector;
+	if (MyOwner)
+	{
+		// Use player's camera
+		FRotator UnusedRot;
+		MyOwner->GetActorEyesViewPoint(OutStartTrace, UnusedRot);
+		
+		// Adjust trace so there is nothing blocking the ray between the camera and the pawn, and calculate distance from adjusted start
+		OutStartTrace = OutStartTrace + AimDir * ((MyOwner->GetActorLocation() - OutStartTrace) | AimDir);
+	}
+
+	return OutStartTrace;
+}
+
 FVector AHordeWeapon::GetMuzzleLocation() const
 {
 	USkeletalMeshComponent* UseMesh = GetWeaponMesh();
@@ -488,19 +519,18 @@ FVector AHordeWeapon::GetMuzzleDirection() const
 	return UseMesh->GetSocketRotation(MuzzleAttachPoint).Vector();
 }
 
-//FHitResult AShooterWeapon::WeaponTrace(const FVector& StartTrace, const FVector& EndTrace) const
-//{
-//
-//	// Perform trace to retrieve hit info
-//	FCollisionQueryParams TraceParams(SCENE_QUERY_STAT(WeaponTrace), true, Instigator);
-//	TraceParams.bTraceAsyncScene = true;
-//	TraceParams.bReturnPhysicalMaterial = true;
-//
-//	FHitResult Hit(ForceInit);
-//	GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, COLLISION_WEAPON, TraceParams);
-//
-//	return Hit;
-//}
+FHitResult AHordeWeapon::WeaponTrace(const FVector& StartTrace, const FVector& EndTrace) const
+{
+	// Perform trace to retrieve hit info
+	FCollisionQueryParams TraceParams(SCENE_QUERY_STAT(WeaponTrace), true, Instigator);
+	TraceParams.bTraceAsyncScene = true;
+	TraceParams.bReturnPhysicalMaterial = true;
+
+	FHitResult Hit(ForceInit);
+	GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, COLLISION_WEAPON, TraceParams);
+
+	return Hit;
+}
 
 void AHordeWeapon::SetOwningPawn(AHordeCharacter* NewOwner)
 {
