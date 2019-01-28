@@ -19,8 +19,8 @@ public:
 	// Sets default values for this component's properties
 	UHordeHealthComponent();
 
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HealthComponent")
-	//uint8 TeamNum;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HealthComponent")
+	uint8 TeamNum;
 
 protected:
 	// Called when the game starts
@@ -41,7 +41,7 @@ protected:
 	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 public:	
-	//float GetHealth() const;
+	float GetHealth() const;
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnHealthChangedSignature OnHealthChanged;
@@ -49,6 +49,6 @@ public:
 	//UFUNCTION(BlueprintCallable, Category = "HealthComponent")
 	//void Heal(float HealAmount);
 
-	//UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HealthComponent")
-	//static bool IsFriendly(AActor* ActorA, AActor* ActorB);
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HealthComponent")
+	static bool IsFriendly(AActor* ActorA, AActor* ActorB);
 };

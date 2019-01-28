@@ -92,4 +92,7 @@ public:
 
 	/** player pressed reload action */
 	void OnReload();
+
+	UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
+	FRotator GetAimOffsets() const;
 };

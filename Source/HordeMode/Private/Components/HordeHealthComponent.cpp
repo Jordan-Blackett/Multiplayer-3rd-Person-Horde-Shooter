@@ -85,32 +85,32 @@ void UHordeHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Dama
 //
 //	OnHealthChanged.Broadcast(this, Health, -HealAmount, nullptr, nullptr, nullptr);
 //}
-//
-//bool USHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
-//{
-//	if (ActorA == nullptr || ActorB == nullptr)
-//	{
-//		// Assume Friendly
-//		return true;
-//	}
-//
-//	USHealthComponent* HealthCompA = Cast<USHealthComponent>(ActorA->GetComponentByClass(USHealthComponent::StaticClass()));
-//	USHealthComponent* HealthCompB = Cast<USHealthComponent>(ActorB->GetComponentByClass(USHealthComponent::StaticClass()));
-//
-//	if (HealthCompA == nullptr || HealthCompB == nullptr)
-//	{
-//		// Assume friendly
-//		return true;
-//	}
-//
-//	return HealthCompA->TeamNum == HealthCompB->TeamNum;
-//}
-//
-//float USHealthComponent::GetHealth() const
-//{
-//	return Health;
-//}
-//
+
+bool UHordeHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
+{
+	if (ActorA == nullptr || ActorB == nullptr)
+	{
+		// Assume Friendly
+		return true;
+	}
+
+	UHordeHealthComponent* HealthCompA = Cast<UHordeHealthComponent>(ActorA->GetComponentByClass(UHordeHealthComponent::StaticClass()));
+	UHordeHealthComponent* HealthCompB = Cast<UHordeHealthComponent>(ActorB->GetComponentByClass(UHordeHealthComponent::StaticClass()));
+
+	if (HealthCompA == nullptr || HealthCompB == nullptr)
+	{
+		// Assume friendly
+		return true;
+	}
+
+	return HealthCompA->TeamNum == HealthCompB->TeamNum;
+}
+
+float UHordeHealthComponent::GetHealth() const
+{
+	return Health;
+}
+
 void UHordeHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

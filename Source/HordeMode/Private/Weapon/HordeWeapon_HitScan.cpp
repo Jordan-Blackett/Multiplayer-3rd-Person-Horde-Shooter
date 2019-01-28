@@ -19,7 +19,7 @@ void AHordeWeapon_HitScan::FireWeapon()
 	const FVector ShootDir = WeaponRandomStream.VRandCone(AimDir, ConeHalfAngle, ConeHalfAngle);
 	const FVector EndTrace = StartTrace + (ShootDir * HitScanConfig.WeaponRange);
 
-	DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::White, false, 0.1f, 0, 1.0f);
+	//DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::White, false, 0.1f, 0, 1.0f);
 
 	const FHitResult Impact = WeaponTrace(StartTrace, EndTrace);
 	ProcessInstantHit(Impact, StartTrace, ShootDir, RandomSeed, CurrentSpread);
