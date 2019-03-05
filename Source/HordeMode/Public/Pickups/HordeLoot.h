@@ -31,7 +31,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UStaticMeshComponent* MeshComp;
 
-	//float 
+	UPROPERTY(EditDefaultsOnly, Category = "Loot")
+	float ImpulseRange;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Loot")
+	float ImpulseHeight;
 
 
 

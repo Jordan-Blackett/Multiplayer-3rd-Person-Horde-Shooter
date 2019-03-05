@@ -22,6 +22,9 @@ AHordeLoot::AHordeLoot()
 
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetupAttachment(SphereComp);
+
+	ImpulseRange = 200.0f;
+	ImpulseHeight = 700.0f;
 }
 
 // Called when the game starts or when spawned
@@ -29,7 +32,7 @@ void AHordeLoot::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SphereComp->AddImpulse(FVector(FMath::RandRange(-200, 200), FMath::RandRange(-200, 200), 700.0f), NAME_None, true);
+	SphereComp->AddImpulse(FVector(FMath::RandRange(-ImpulseRange, ImpulseRange), FMath::RandRange(-ImpulseRange, ImpulseRange), ImpulseHeight), NAME_None, true);
 
 	if (Role == ROLE_Authority)
 	{

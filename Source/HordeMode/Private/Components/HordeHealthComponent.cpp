@@ -2,7 +2,7 @@
 
 #include "HordeHealthComponent.h"
 #include "Net/UnrealNetwork.h"
-//#include "SGameMode.h"
+#include "HordeGameMode.h"
 
 // Sets default values for this component's properties
 UHordeHealthComponent::UHordeHealthComponent()
@@ -62,14 +62,14 @@ void UHordeHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Dama
 
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
 
-	//if (bIsDead)
-	//{
-	//	ASGameMode* GM = Cast<ASGameMode>(GetWorld()->GetAuthGameMode());
-	//	if (GM)
-	//	{
-	//		GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser, InstigatedBy);
-	//	}
-	//}
+	if (bIsDead)
+	{
+		AHordeGameMode* GM = Cast<AHordeGameMode>(GetWorld()->GetAuthGameMode());
+		if (GM)
+		{
+			GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser, InstigatedBy);
+		}
+	}
 }
 
 void UHordeHealthComponent::Heal(float HealAmount)
