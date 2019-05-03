@@ -172,6 +172,7 @@ void AHordeTrackerBot::SelfDestruct()
 
 void AHordeTrackerBot::DamageSelf()
 {
+	HealthComp->bCanDamageSelf = true;
 	UGameplayStatics::ApplyDamage(this, 5, GetInstigatorController(), this, nullptr);
 }
 
@@ -228,7 +229,6 @@ void AHordeTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 		if (PlayerPawn && !UHordeHealthComponent::IsFriendly(OtherActor, this))
 		{
 			// We overlapped with a player!
-
 			if (Role == ROLE_Authority)
 			{
 				// Start self destruction sequence

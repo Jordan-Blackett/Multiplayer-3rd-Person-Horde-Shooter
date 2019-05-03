@@ -205,7 +205,7 @@ void AHordeWeapon_HitScan::DealDamage(const FHitResult& Impact, const FVector& S
 	PointDmg.ShotDirection = ShootDir;
 	PointDmg.Damage = HitScanConfig.HitDamage;
 
-	Impact.GetActor()->TakeDamage(PointDmg.Damage, PointDmg, MyPawn->Controller, this);
+	Impact.GetActor()->TakeDamage(PointDmg.Damage, PointDmg, MyPawn->Controller, GetOwner());
 }
 
 void AHordeWeapon_HitScan::OnBurstFinished()

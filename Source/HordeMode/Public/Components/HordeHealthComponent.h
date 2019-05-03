@@ -22,6 +22,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HealthComponent")
 	uint8 TeamNum;
 
+	bool bCanDamageSelf;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

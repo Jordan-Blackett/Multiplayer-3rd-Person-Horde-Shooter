@@ -10,7 +10,8 @@ UHordeHealthComponent::UHordeHealthComponent()
 	DefaultHealth = 100;
 	bIsDead = false;
 
-	//TeamNum = 255;
+	TeamNum = 255;
+	bCanDamageSelf = false;
 
 	SetIsReplicated(true);
 }
@@ -48,10 +49,10 @@ void UHordeHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Dama
 		return;
 	}
 
-	//if (DamageCauser != DamagedActor && IsFriendly(DamagedActor, DamageCauser))
-	//{
-	//	return;
-	//}
+	if (IsFriendly(DamagedActor, DamageCauser))
+	{
+		return;
+	}
 
 	// Update health clamped
 	Health = FMath::Clamp(Health - Damage, 0.0f, DefaultHealth);
@@ -101,6 +102,11 @@ bool UHordeHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
 	{
 		// Assume friendly
 		return true;
+	}
+
+	if (HealthCompA == HealthCompB)
+	{
+		return !HealthCompA->bCanDamageSelf;
 	}
 
 	return HealthCompA->TeamNum == HealthCompB->TeamNum;
