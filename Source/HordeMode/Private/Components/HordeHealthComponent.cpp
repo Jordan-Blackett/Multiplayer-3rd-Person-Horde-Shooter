@@ -49,6 +49,7 @@ void UHordeHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Dama
 		return;
 	}
 
+	UE_LOG(LogTemp, Log, TEXT("Damage %s"), *FString::SanitizeFloat(Damage));
 	if (IsFriendly(DamagedActor, DamageCauser))
 	{
 		return;

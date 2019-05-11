@@ -77,7 +77,7 @@ struct FWeaponData
 USTRUCT()
 struct FHitScanTrace
 {
-	GENERATED_BODY()
+	GENERATED_USTRUCT_BODY()
 
 public:
 	UPROPERTY()
