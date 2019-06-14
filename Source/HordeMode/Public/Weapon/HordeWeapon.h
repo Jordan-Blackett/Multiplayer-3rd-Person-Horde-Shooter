@@ -324,6 +324,15 @@ protected:
 	//////////////////////////////////////////////////////////////////////////
 	// Inventory
 
+	/** attaches weapon mesh to pawn's mesh */
+	void AttachMeshToPawn();
+
+	/** detaches weapon mesh from pawn */
+	void DetachMeshFromPawn();
+
+	/** detaches weapon mesh from pawn */
+	void AttachMeshToPawnPrevEquipSocket();
+
 	//////////////////////////////////////////////////////////////////////////
 	// Weapon usage helpers
 
@@ -413,26 +422,26 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// Inventory
 
-	///** weapon is being equipped by owner pawn */
-	//virtual void OnEquip(const AShooterWeapon* LastWeapon);
+	/** weapon is being equipped by owner pawn */
+	virtual void OnEquip(const AHordeWeapon* LastWeapon);
 
-	///** weapon is now equipped by owner pawn */
-	//virtual void OnEquipFinished();
+	/** weapon is now equipped by owner pawn */
+	virtual void OnEquipFinished();
 
-	///** weapon is holstered by owner pawn */
-	//virtual void OnUnEquip();
+	/** weapon is holstered by owner pawn */
+	virtual void OnUnEquip(bool PrevWeapon);
 
-	///** [server] weapon was added to pawn's inventory */
-	//virtual void OnEnterInventory(AShooterCharacter* NewOwner);
+	/** [server] weapon was added to pawn's inventory */
+	virtual void OnEnterInventory(AHordeCharacter* NewOwner);
 
-	///** [server] weapon was removed from pawn's inventory */
-	//virtual void OnLeaveInventory();
+	/** [server] weapon was removed from pawn's inventory */
+	virtual void OnLeaveInventory();
 
-	///** check if it's currently equipped */
-	//bool IsEquipped() const;
+	/** check if it's currently equipped */
+	bool IsEquipped() const;
 
-	///** check if mesh is already attached */
-	//bool IsAttachedToPawn() const;
+	/** check if mesh is already attached */
+	bool IsAttachedToPawn() const;
 
 	//////////////////////////////////////////////////////////////////////////
 	// 

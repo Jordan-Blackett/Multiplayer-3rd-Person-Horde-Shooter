@@ -58,6 +58,168 @@ void AHordeWeapon::Destroyed()
 //////////////////////////////////////////////////////////////////////////
 // Inventory
 
+void AHordeWeapon::OnEquip(const AHordeWeapon* LastWeapon)
+{
+	AttachMeshToPawn();
+
+	bPendingEquip = true;
+	DetermineWeaponState();
+
+	// Only play animation if last weapon is valid
+	if (LastWeapon)
+	{
+		float Duration = PlayWeaponAnimation(EquipAnim);
+		if (Duration <= 0.0f)
+		{
+			// failsafe
+			Duration = 0.5f;
+		}
+		EquipStartedTime = GetWorld()->GetTimeSeconds();
+		EquipDuration = Duration;
+
+		GetWorldTimerManager().SetTimer(TimerHandle_OnEquipFinished, this, &AHordeWeapon::OnEquipFinished, Duration, false);
+	}
+	else
+	{
+		OnEquipFinished();
+	}
+
+	if (MyPawn && MyPawn->IsLocallyControlled())
+	{
+		PlayWeaponSound(EquipSound);
+	}
+
+	//AHordeCharacter::NotifyEquipWeapon.Broadcast(MyPawn, this);
+}
+
+void AHordeWeapon::OnEquipFinished()
+{
+	AttachMeshToPawn();
+
+	bIsEquipped = true;
+	bPendingEquip = false;
+
+	// Determine the state so that the can reload checks will work
+	DetermineWeaponState();
+
+	if (MyPawn)
+	{
+		// try to reload empty clip
+		if (MyPawn->IsLocallyControlled() &&
+			CurrentAmmoInClip <= 0 &&
+			CanReload())
+		{
+			StartReload();
+		}
+	}
+}
+
+void AHordeWeapon::OnUnEquip(bool PrevWeapon)
+{
+	if (PrevWeapon)	{
+		AttachMeshToPawnPrevEquipSocket();
+	} else {
+		DetachMeshFromPawn();
+	}
+
+	bIsEquipped = false;
+	StopFire();
+
+	if (bPendingReload)
+	{
+		StopWeaponAnimation(ReloadAnim);
+		bPendingReload = false;
+
+		GetWorldTimerManager().ClearTimer(TimerHandle_StopReload);
+		GetWorldTimerManager().ClearTimer(TimerHandle_ReloadWeapon);
+	}
+
+	if (bPendingEquip)
+	{
+		StopWeaponAnimation(EquipAnim);
+		bPendingEquip = false;
+
+		GetWorldTimerManager().ClearTimer(TimerHandle_OnEquipFinished);
+	}
+
+	//AShooterCharacter::NotifyUnEquipWeapon.Broadcast(MyPawn, this);
+
+	DetermineWeaponState();
+}
+
+void AHordeWeapon::OnEnterInventory(AHordeCharacter* NewOwner)
+{
+	SetOwningPawn(NewOwner);
+}
+
+void AHordeWeapon::OnLeaveInventory()
+{
+	if (IsAttachedToPawn())
+	{
+		OnUnEquip(false);
+	}
+
+	if (Role == ROLE_Authority)
+	{
+		SetOwningPawn(NULL);
+	}
+}
+
+void AHordeWeapon::AttachMeshToPawn()
+{
+	if (MyPawn)
+	{
+		// Remove and hide mesh
+		DetachMeshFromPawn();
+
+		// For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
+		FName AttachPoint = MyPawn->GetWeaponAttachPoint();
+		if (MyPawn->IsLocallyControlled() == true)
+		{
+			USkeletalMeshComponent* PawnMesh = MyPawn->GetMesh();
+			MeshComp->SetHiddenInGame(false);
+			MeshComp->AttachToComponent(PawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+		}
+		else
+		{
+			USkeletalMeshComponent* UseWeaponMesh = GetWeaponMesh();
+			USkeletalMeshComponent* UsePawnMesh = MyPawn->GetMesh();
+			UseWeaponMesh->AttachToComponent(UsePawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+			UseWeaponMesh->SetHiddenInGame(false);
+		}
+	}
+}
+
+void AHordeWeapon::DetachMeshFromPawn()
+{
+	MeshComp->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+	MeshComp->SetHiddenInGame(true);
+}
+
+void AHordeWeapon::AttachMeshToPawnPrevEquipSocket()
+{
+	if (MyPawn)
+	{
+		// Remove and hide mesh
+		DetachMeshFromPawn();
+
+		// For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
+		FName AttachPoint = MyPawn->GetWeaponEquipAttachPoint();
+		if (MyPawn->IsLocallyControlled() == true)
+		{
+			USkeletalMeshComponent* PawnMesh = MyPawn->GetMesh();
+			MeshComp->SetHiddenInGame(false);
+			MeshComp->AttachToComponent(PawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+		}
+		else
+		{
+			USkeletalMeshComponent* UseWeaponMesh = GetWeaponMesh();
+			USkeletalMeshComponent* UsePawnMesh = MyPawn->GetMesh();
+			UseWeaponMesh->AttachToComponent(UsePawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+			UseWeaponMesh->SetHiddenInGame(false);
+		}
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////
 // Input
@@ -656,15 +818,15 @@ void AHordeWeapon::StopSimulatingWeaponFire()
 	}
 }
 
-//bool AHordeWeapon::IsEquipped() const
-//{
-//	return bIsEquipped;
-//}
+bool AHordeWeapon::IsEquipped() const
+{
+	return bIsEquipped;
+}
 
-//bool AHordeWeapon::IsAttachedToPawn() const
-//{
-//	return bIsEquipped || bPendingEquip;
-//}
+bool AHordeWeapon::IsAttachedToPawn() const
+{
+	return bIsEquipped || bPendingEquip;
+}
 
 EWeaponState::Type AHordeWeapon::GetCurrentState() const
 {

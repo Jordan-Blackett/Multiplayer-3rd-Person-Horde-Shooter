@@ -35,6 +35,7 @@ AHordeCharacter::AHordeCharacter()
 	ZoomInterpSpeed = 20;
 
 	WeaponAttachSocketName = "WeaponSocket";
+	WeaponAttachEquipSocketName = "BackEquipSocket";
 }
 
 // Called when the game starts or when spawned
@@ -48,16 +49,18 @@ void AHordeCharacter::BeginPlay()
 
 	if (Role == ROLE_Authority)
 	{
-		// Spawn a default weapon
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		InitialiseDefaultInventory();
 
-		CurrentWeapon = GetWorld()->SpawnActor<AHordeWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-		if (CurrentWeapon)
-		{
-			CurrentWeapon->SetOwningPawn(this);
-			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
-		}
+		//// Spawn a default weapon
+		//FActorSpawnParameters SpawnParams;
+		//SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		//CurrentWeapon = GetWorld()->SpawnActor<AHordeWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		//if (CurrentWeapon)
+		//{
+		//	CurrentWeapon->SetOwningPawn(this);
+		//	CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
+		//}
 	}
 }
 
@@ -84,6 +87,14 @@ void AHordeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AHordeCharacter::StopFire);
 
 	PlayerInputComponent->BindAction("Reload", IE_Released, this, &AHordeCharacter::OnReload);
+
+	PlayerInputComponent->BindAction("WeaponSlot1", IE_Pressed, this, &AHordeCharacter::OnNextWeapon);
+	PlayerInputComponent->BindAction("WeaponSlot2", IE_Pressed, this, &AHordeCharacter::OnPrevWeapon);
+	PlayerInputComponent->BindAction("WeaponSlot3", IE_Pressed, this, &AHordeCharacter::OnNextWeapon);
+	PlayerInputComponent->BindAction("WeaponSlot4", IE_Pressed, this, &AHordeCharacter::OnPrevWeapon);
+
+	PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AHordeCharacter::OnNextWeapon);
+	PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AHordeCharacter::OnPrevWeapon);
 }
 
 void AHordeCharacter::MoveForward(float Value)
@@ -214,6 +225,219 @@ void AHordeCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	// Only to local owner: weapon change requests are locally instigated, other clients don't need it
+	DOREPLIFETIME_CONDITION(AHordeCharacter, Inventory, COND_OwnerOnly);
+
 	DOREPLIFETIME(AHordeCharacter, CurrentWeapon);
 	DOREPLIFETIME(AHordeCharacter, bDied);
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Inventory
+
+void AHordeCharacter::InitialiseDefaultInventory()
+{
+	if (Role < ROLE_Authority)
+	{
+		return;
+	}
+
+	int32 NumWeapons = DefaultInventory.Num();
+	for (int32 i = 0; i < NumWeapons; i++)
+	{
+		if (DefaultInventory[i])
+		{
+			FActorSpawnParameters SpawnInfo;
+			SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			AHordeWeapon* NewWeapon = GetWorld()->SpawnActor<AHordeWeapon>(DefaultInventory[i], SpawnInfo);
+			AddWeapon(NewWeapon);
+		}
+	}
+
+	// Equip first weapon in inventory
+	if (Inventory.Num() > 0)
+	{
+		EquipWeapon(Inventory[0]);
+	}
+}
+
+void AHordeCharacter::DestroyInventory()
+{
+	if (Role < ROLE_Authority)
+	{
+		return;
+	}
+
+	// Remove all weapons from inventory and destroy them
+	for (int32 i = Inventory.Num() - 1; i >= 0; i--)
+	{
+		AHordeWeapon* Weapon = Inventory[i];
+		if (Weapon)
+		{
+			RemoveWeapon(Weapon);
+			Weapon->Destroy();
+		}
+	}
+}
+
+void AHordeCharacter::AddWeapon(AHordeWeapon* Weapon)
+{
+	if (Weapon && Role == ROLE_Authority)
+	{
+		Weapon->OnEnterInventory(this);
+		Inventory.AddUnique(Weapon);
+	}
+}
+
+void AHordeCharacter::RemoveWeapon(AHordeWeapon* Weapon)
+{
+	if (Weapon && Role == ROLE_Authority)
+	{
+		Weapon->OnLeaveInventory();
+		Inventory.RemoveSingle(Weapon);
+	}
+}
+
+void AHordeCharacter::EquipWeapon(AHordeWeapon* Weapon)
+{
+	if (Weapon)
+	{
+		if (Role == ROLE_Authority)
+		{
+			SetCurrentWeapon(Weapon, CurrentWeapon);
+		}
+		else
+		{
+			ServerEquipWeapon(Weapon);
+		}
+	}
+}
+
+AHordeWeapon* AHordeCharacter::FindWeapon(TSubclassOf<AHordeWeapon> WeaponClass)
+{
+	for (int32 i = 0; i < Inventory.Num(); i++)
+	{
+		if (Inventory[i] && Inventory[i]->IsA(WeaponClass))
+		{
+			return Inventory[i];
+		}
+	}
+
+	return NULL;
+}
+
+void AHordeCharacter::ServerEquipWeapon_Implementation(AHordeWeapon* Weapon)
+{
+	EquipWeapon(Weapon);
+}
+
+bool AHordeCharacter::ServerEquipWeapon_Validate(AHordeWeapon* Weapon)
+{
+	return true;
+}
+
+void AHordeCharacter::SetCurrentWeapon(AHordeWeapon* NewWeapon, AHordeWeapon* LastWeapon)
+{
+	AHordeWeapon* LocalLastWeapon = nullptr;
+	//AHordeWeapon* LocalLastWeapon = PrevWeapon;
+
+	if (LastWeapon != NULL)
+	{
+		LocalLastWeapon = LastWeapon;
+	}
+	else if (NewWeapon != CurrentWeapon)
+	{
+		LocalLastWeapon = CurrentWeapon;
+	}
+
+	// Unequip previous
+	if (LocalLastWeapon)
+	{
+		LocalLastWeapon->OnUnEquip(true);
+		if (PrevWeapon)
+		{
+			PrevWeapon->OnUnEquip(false);
+		}
+
+		PrevWeapon = LocalLastWeapon;
+	}
+
+	CurrentWeapon = NewWeapon;
+
+	// equip new one
+	if (NewWeapon)
+	{
+		NewWeapon->SetOwningPawn(this);	// Make sure weapon's MyPawn is pointing back to us. During replication, we can't guarantee APawn::CurrentWeapon will rep after AWeapon::MyPawn!
+
+		NewWeapon->OnEquip(LastWeapon);
+	}
+}
+
+void AHordeCharacter::OnRep_CurrentWeapon(AHordeWeapon* LastWeapon)
+{
+	SetCurrentWeapon(CurrentWeapon, LastWeapon);
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Input handlers
+
+void AHordeCharacter::OnEquipWeapon1()
+{
+
+}
+
+void AHordeCharacter::OnEquipWeapon2()
+{
+
+}
+
+void AHordeCharacter::OnEquipWeapon3()
+{
+
+}
+
+void AHordeCharacter::OnEquipWeapon4()
+{
+
+}
+
+void AHordeCharacter::OnNextWeapon()
+{
+	//AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
+	//if (MyPC) // && MyPC->IsGameInputAllowed())
+	//{
+		if (Inventory.Num() >= 2 && (CurrentWeapon == NULL || CurrentWeapon->GetCurrentState() != EWeaponState::Equipping))
+		{
+			const int32 CurrentWeaponIdx = Inventory.IndexOfByKey(CurrentWeapon);
+			AHordeWeapon* NextWeapon = Inventory[(CurrentWeaponIdx + 1) % Inventory.Num()];
+			EquipWeapon(NextWeapon);
+		}
+	//}
+}
+
+void AHordeCharacter::OnPrevWeapon()
+{
+	//AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
+	//if (MyPC && MyPC->IsGameInputAllowed())
+	//{
+	//	if (Inventory.Num() >= 2 && (CurrentWeapon == NULL || CurrentWeapon->GetCurrentState() != EWeaponState::Equipping))
+	//	{
+	//		const int32 CurrentWeaponIdx = Inventory.IndexOfByKey(CurrentWeapon);
+	//		AShooterWeapon* PrevWeapon = Inventory[(CurrentWeaponIdx - 1 + Inventory.Num()) % Inventory.Num()];
+	//		EquipWeapon(PrevWeapon);
+	//	}
+	//}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Reading data
+
+FName AHordeCharacter::GetWeaponAttachPoint() const
+{
+	return WeaponAttachSocketName;
+}
+
+FName AHordeCharacter::GetWeaponEquipAttachPoint() const
+{
+	return WeaponAttachEquipSocketName;
 }

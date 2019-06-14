@@ -20,6 +20,47 @@ public:
 	// Sets default values for this character's properties
 	AHordeCharacter();
 
+public:
+
+	//////////////////////////////////////////////////////////////////////////
+	// Inventory
+
+	// [Server] Add weapon to inventory
+	void AddWeapon(class AHordeWeapon* Weapon);
+
+	// [Server] Remove weapon from inventory
+	void RemoveWeapon(class AHordeWeapon* Weapon);
+
+	// [Server + Client] Equips weapon from inventory
+	void EquipWeapon(class AHordeWeapon* Weapon);
+
+	// Find weapon in inventory
+	class AHordeWeapon* FindWeapon(TSubclassOf<class AHordeWeapon> WeaponClass);
+
+	//////////////////////////////////////////////////////////////////////////
+	// Input handlers
+
+	// Player pressed equip weapon action
+	void OnEquipWeapon1();
+	void OnEquipWeapon2();
+	void OnEquipWeapon3();
+	void OnEquipWeapon4();
+
+	// Player pressed next weapon action
+	void OnNextWeapon();
+
+	// Player pressed prev weapon action
+	void OnPrevWeapon();
+
+	//////////////////////////////////////////////////////////////////////////
+	// Reading data
+
+	/** get weapon attach point */
+	FName GetWeaponAttachPoint() const;
+
+	/** get weapon attach point */
+	FName GetWeaponEquipAttachPoint() const;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -59,11 +100,18 @@ protected:
 	UPROPERTY(Replicated)
 	AHordeWeapon* CurrentWeapon;
 
+	UPROPERTY(Replicated)
+	AHordeWeapon* PrevWeapon;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TSubclassOf<AHordeWeapon> StarterWeaponClass;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
 	FName WeaponAttachSocketName;
+
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
+	FName WeaponAttachEquipSocketName;
 
 	UFUNCTION()
 	void OnHealthChanged(UHordeHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
@@ -71,6 +119,17 @@ protected:
 	/* Pawn died previously */
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
 	bool bDied;
+
+	//////////////////////////////////////////////////////////////////////////
+	// Inventory
+
+	// Default inventory list
+	UPROPERTY(EditDefaultsOnly, Category = Inventory)
+	TArray<TSubclassOf<class AHordeWeapon> > DefaultInventory;
+
+	// Weapons inventory
+	UPROPERTY(Transient, Replicated)
+	TArray<class AHordeWeapon*> Inventory;
 
 public:	
 	// Called every frame
@@ -95,4 +154,40 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
 	FRotator GetAimOffsets() const;
+
+protected:
+
+	//////////////////////////////////////////////////////////////////////////
+	// Inventory
+
+	// [Server] Initialise's default inventory
+	void InitialiseDefaultInventory();
+
+	// [Server] Remove all weapons from inventory and destroy them */
+	void DestroyInventory();
+
+	// [Server] Equip weapon
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerEquipWeapon(class AHordeWeapon* NewWeapon);
+	void ServerEquipWeapon_Implementation(class AHordeWeapon* NewWeapon);
+	bool ServerEquipWeapon_Validate(class AHordeWeapon* NewWeapon);
+
+	// Updates current weapon
+	void SetCurrentWeapon(class AHordeWeapon* NewWeapon, class AHordeWeapon* LastWeapon = NULL);
+
+	// Current weapon rep handler
+	UFUNCTION()
+	void OnRep_CurrentWeapon(class AHordeWeapon* LastWeapon);
+
+	/** update targeting state */
+	//UFUNCTION(reliable, server, WithValidation)
+	//void ServerSetTargeting(bool bNewTargeting);
+
+	/** update targeting state */
+	//UFUNCTION(reliable, server, WithValidation)
+	//void ServerSetRunning(bool bNewRunning, bool bToggle);
+
+	/** Builds list of points to check for pausing replication for a connection*/
+	//void BuildPauseReplicationCheckPoints(TArray<FVector>& RelevancyCheckPoints);
+
 };
