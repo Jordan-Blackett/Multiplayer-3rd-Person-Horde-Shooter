@@ -28,18 +28,22 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UBoxComponent* BoxComp;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UStaticMeshComponent* MeshComp;
+	FTimerHandle TraceLineTimerHandle;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Loot")
-	float ImpulseRange;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	//UStaticMeshComponent* MeshComp;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Loot")
-	float ImpulseHeight;
+	//UPROPERTY(EditDefaultsOnly, Category = "Loot")
+	//float ImpulseRange;
 
-
+	//UPROPERTY(EditDefaultsOnly, Category = "Loot")
+	//float ImpulseHeight;
 
 public:	
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
+	virtual void NotifyActorEndOverlap(AActor* OtherActor) override;
+
+	UFUNCTION()
+	void TraceLine(AActor* OtherActor);
 	
 };

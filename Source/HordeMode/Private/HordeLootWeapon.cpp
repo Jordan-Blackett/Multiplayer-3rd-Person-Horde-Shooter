@@ -1,0 +1,66 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#include "HordeLootWeapon.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/SphereComponent.h"
+
+AHordeLootWeapon::AHordeLootWeapon()
+{
+	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
+	MeshComp->SetupAttachment(SphereComp);
+}
+
+void AHordeLootWeapon::BeginPlay()
+{
+	AHordeLoot::BeginPlay();
+}
+
+void AHordeLootWeapon::NotifyActorBeginOverlap(AActor * OtherActor)
+{
+	AHordeLoot::NotifyActorBeginOverlap(OtherActor);
+
+	if (Role == ROLE_Authority)
+	{
+		//Cast<AHordeCharacter>(OtherActor);
+
+
+		//TraceLine(OtherActor);
+
+		//// Aim Dir
+		//FVector AimDir = FVector::ZeroVector;
+		//FVector CamLoc;
+		//FRotator CamRot;
+		//OtherActor->GetActorEyesViewPoint(CamLoc, CamRot);
+		//AimDir = CamRot.Vector();
+
+		//// Start Trace 
+		//FVector StartTrace = FVector::ZeroVector;
+		//// Use player's camera
+		//FRotator UnusedRot;
+		//OtherActor->GetActorEyesViewPoint(StartTrace, UnusedRot);
+		//// Adjust trace so there is nothing blocking the ray between the camera and the pawn, and calculate distance from adjusted start
+		//StartTrace = StartTrace + AimDir * ((OtherActor->GetActorLocation() - StartTrace) | AimDir);
+
+		//const FVector EndTrace = StartTrace + (AimDir * 1000);
+
+		//DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::White, false, 0.1f, 0, 1.0f);
+
+		//FCollisionQueryParams RV_TraceParams = FCollisionQueryParams(FName(TEXT("RV_Trace")), true, this);
+		//RV_TraceParams.bTraceComplex = true;
+		//RV_TraceParams.bTraceAsyncScene = true;
+		//RV_TraceParams.bReturnPhysicalMaterial = false;
+
+		//// Perform trace to retrieve hit info
+		//FCollisionQueryParams TraceParams(SCENE_QUERY_STAT(WeaponTrace), true, Instigator);
+		//TraceParams.bTraceAsyncScene = true;
+		//TraceParams.bReturnPhysicalMaterial = true;
+
+		//FHitResult Hit(ForceInit);
+		//GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, COLLISION_WEAPON, TraceParams);
+
+		//OtherActor
+		
+		
+		//Destroy();
+	}
+}
