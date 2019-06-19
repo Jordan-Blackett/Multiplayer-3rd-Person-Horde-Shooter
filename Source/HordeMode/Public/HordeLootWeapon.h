@@ -6,6 +6,8 @@
 #include "Pickups/HordeLoot.h"
 #include "HordeLootWeapon.generated.h"
 
+class AHordeWeapon;
+
 /**
  * 
  */
@@ -24,7 +26,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	USkeletalMeshComponent* MeshComp;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Loot")
+	TSubclassOf<AHordeWeapon> WeaponClass;
+
 public:
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 	
+	TSubclassOf<AHordeWeapon> GetWeaponClass();
 };

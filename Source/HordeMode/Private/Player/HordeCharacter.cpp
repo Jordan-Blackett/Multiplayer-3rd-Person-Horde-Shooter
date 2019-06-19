@@ -11,6 +11,12 @@
 #include "HordeHealthComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/Controller.h"
+#include "Engine/World.h"
+#include "Public/TimerManager.h"
+#include "Engine/Engine.h"
+#include "DrawDebugHelpers.h"
+#include "HordeLoot.h"
+#include "HordeLootWeapon.h"
 
 // Sets default values
 AHordeCharacter::AHordeCharacter()
@@ -61,6 +67,8 @@ void AHordeCharacter::BeginPlay()
 		//	CurrentWeapon->SetOwningPawn(this);
 		//	CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
 		//}
+
+		GetWorld()->GetTimerManager().SetTimer(TraceLineTimerHandle, this, &AHordeCharacter::InspectActor, 0.5f, true);
 	}
 }
 
@@ -95,6 +103,9 @@ void AHordeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 	PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, this, &AHordeCharacter::OnNextWeapon);
 	PlayerInputComponent->BindAction("PrevWeapon", IE_Pressed, this, &AHordeCharacter::OnPrevWeapon);
+
+	PlayerInputComponent->BindAction("PickUpLoot", IE_Pressed, this, &AHordeCharacter::PickUpInspectedLoot);
+	PlayerInputComponent->BindAction("PickUpLoot", IE_Released, this, &AHordeCharacter::PickUpInspectedLoot);
 }
 
 void AHordeCharacter::MoveForward(float Value)
@@ -298,13 +309,13 @@ void AHordeCharacter::RemoveWeapon(AHordeWeapon* Weapon)
 	}
 }
 
-void AHordeCharacter::EquipWeapon(AHordeWeapon* Weapon)
+void AHordeCharacter::EquipWeapon(AHordeWeapon* Weapon, bool NewLootWeapon)
 {
 	if (Weapon)
 	{
 		if (Role == ROLE_Authority)
 		{
-			SetCurrentWeapon(Weapon, CurrentWeapon);
+			SetCurrentWeapon(Weapon, NewLootWeapon, CurrentWeapon);
 		}
 		else
 		{
@@ -336,7 +347,7 @@ bool AHordeCharacter::ServerEquipWeapon_Validate(AHordeWeapon* Weapon)
 	return true;
 }
 
-void AHordeCharacter::SetCurrentWeapon(AHordeWeapon* NewWeapon, AHordeWeapon* LastWeapon)
+void AHordeCharacter::SetCurrentWeapon(AHordeWeapon* NewWeapon, bool NewLootWeapon, AHordeWeapon* LastWeapon)
 {
 	AHordeWeapon* LocalLastWeapon = nullptr;
 	//AHordeWeapon* LocalLastWeapon = PrevWeapon;
@@ -353,18 +364,27 @@ void AHordeCharacter::SetCurrentWeapon(AHordeWeapon* NewWeapon, AHordeWeapon* La
 	// Unequip previous
 	if (LocalLastWeapon)
 	{
-		LocalLastWeapon->OnUnEquip(true);
-		if (PrevWeapon)
+		if (!NewLootWeapon)
 		{
-			PrevWeapon->OnUnEquip(false);
+			// Hide current weapon and place it on the back
+			LocalLastWeapon->OnUnEquip(true);
+			if (PrevWeapon)
+			{
+				// Hide on back weapon
+				PrevWeapon->OnUnEquip(false);
+			}
+			PrevWeapon = LocalLastWeapon;
 		}
-
-		PrevWeapon = LocalLastWeapon;
+		else
+		{
+			// Hide current weapon
+			LocalLastWeapon->OnUnEquip(false);
+		}
 	}
 
 	CurrentWeapon = NewWeapon;
 
-	// equip new one
+	// Equip new one
 	if (NewWeapon)
 	{
 		NewWeapon->SetOwningPawn(this);	// Make sure weapon's MyPawn is pointing back to us. During replication, we can't guarantee APawn::CurrentWeapon will rep after AWeapon::MyPawn!
@@ -376,6 +396,139 @@ void AHordeCharacter::SetCurrentWeapon(AHordeWeapon* NewWeapon, AHordeWeapon* La
 void AHordeCharacter::OnRep_CurrentWeapon(AHordeWeapon* LastWeapon)
 {
 	SetCurrentWeapon(CurrentWeapon, LastWeapon);
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Actor Pickup
+
+void AHordeCharacter::InspectActor()
+{
+	// Aim Dir
+	FVector AimDir = FVector::ZeroVector;
+	FVector CamLoc;
+	FRotator CamRot;
+	GetActorEyesViewPoint(CamLoc, CamRot);
+	AimDir = CamRot.Vector();
+
+	// Start Trace 
+	FVector StartTrace = FVector::ZeroVector;
+	// Use player's camera
+	FRotator UnusedRot;
+	GetActorEyesViewPoint(StartTrace, UnusedRot);
+	// Adjust trace so there is nothing blocking the ray between the camera and the pawn, and calculate distance from adjusted start
+	StartTrace = StartTrace + AimDir * ((GetActorLocation() - StartTrace) | AimDir);
+
+	const FVector EndTrace = StartTrace + (AimDir * 1000);
+
+	DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::White, false, 0.5f, 0, 2.0f);
+
+	// Perform trace to retrieve hit info
+	FCollisionQueryParams TraceParams(FName(TEXT("Loot_Trace")), true);
+	TraceParams.bTraceAsyncScene = true;
+
+	FHitResult Hit(ForceInit);
+	if (GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, COLLISION_LOOT, TraceParams))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("The Component Being Hit is: %s"), *Hit.GetComponent()->GetName()));
+
+		InspectedLoot = Cast<AHordeLoot>(Hit.GetActor());
+		//if (InspectedLoot)
+		//{
+		//	//InspectedLoot->Destroy();
+		//	//test -- on equip
+		//}
+		//else
+		//{
+		//	InspectedLoot = nullptr;
+		//}
+	}
+	else
+	{
+		InspectedLoot = nullptr;
+	}
+}
+
+void AHordeCharacter::PickUpInspectedLoot()
+{
+	if (Role != ROLE_Authority)
+	{
+		ServerInspectedLoot();
+		return;
+	}
+
+	// Set timer
+	if (!GetWorld()->GetTimerManager().IsTimerActive(HoldKeyTimerHandle))
+	{
+		GetWorld()->GetTimerManager().SetTimer(HoldKeyTimerHandle, this, &AHordeCharacter::EquipInspectedLoot, 1.0f, false);
+		return;
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().ClearTimer(HoldKeyTimerHandle);
+	}
+
+	if (InspectedLoot)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("PICKED UP LOOT")));
+
+		// Pick up
+
+		// Weapon
+		if (Cast<AHordeLoot>(InspectedLoot))
+		{
+			//getinputkeytimedown
+		}
+
+		InspectedLoot->Destroy();
+		InspectedLoot = nullptr;
+	}
+}
+
+void AHordeCharacter::ServerInspectedLoot_Implementation()
+{
+	PickUpInspectedLoot();
+}
+
+bool AHordeCharacter::ServerInspectedLoot_Validate()
+{
+	return true;
+}
+
+void AHordeCharacter::EquipInspectedLoot()
+{
+	if (InspectedLoot)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("EQUIP LOOT")));
+
+		// Weapon
+		if (Cast<AHordeLootWeapon>(InspectedLoot)->GetWeaponClass() != nullptr)
+		{
+			const int32 CurrentWeaponIdx = Inventory.IndexOfByKey(CurrentWeapon);
+
+			// Spawn new weapon
+			FActorSpawnParameters SpawnInfo;
+			SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			AHordeWeapon* NewWeapon = GetWorld()->SpawnActor<AHordeWeapon>(Cast<AHordeLootWeapon>(InspectedLoot)->GetWeaponClass(), SpawnInfo);
+			NewWeapon->OnEnterInventory(this);
+
+			// Equip new weapon
+			EquipWeapon(NewWeapon, true);
+
+			// Drop current weapon
+
+			// Create AHordeLootWeapon
+
+			// Replace current weapon inventory
+			Inventory[CurrentWeaponIdx] = NewWeapon;
+		}
+
+		// TODO: Vacuum
+
+
+
+		InspectedLoot->Destroy();
+		InspectedLoot = nullptr;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -3,6 +3,7 @@
 #include "HordeLootWeapon.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/SphereComponent.h"
+#include "HordeWeapon.h"
 
 AHordeLootWeapon::AHordeLootWeapon()
 {
@@ -63,4 +64,9 @@ void AHordeLootWeapon::NotifyActorBeginOverlap(AActor * OtherActor)
 		
 		//Destroy();
 	}
+}
+
+TSubclassOf<AHordeWeapon> AHordeLootWeapon::GetWeaponClass()
+{
+	return WeaponClass;
 }

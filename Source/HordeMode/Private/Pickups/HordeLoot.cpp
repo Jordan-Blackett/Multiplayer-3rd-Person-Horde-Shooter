@@ -52,9 +52,9 @@ void AHordeLoot::NotifyActorBeginOverlap(AActor* OtherActor)
 	{
 		if (OtherActor)
 		{
-			FTimerDelegate TimerDel;
-			TimerDel.BindUFunction(this, FName("TraceLine"), OtherActor);
-			GetWorld()->GetTimerManager().SetTimer(TraceLineTimerHandle, TimerDel, 0.5f, true);
+			//FTimerDelegate TimerDel;
+			//TimerDel.BindUFunction(this, FName("TraceLine"), OtherActor);
+			//GetWorld()->GetTimerManager().SetTimer(TraceLineTimerHandle, TimerDel, 0.5f, true);
 		}
 	}
 }
@@ -74,36 +74,36 @@ void AHordeLoot::NotifyActorEndOverlap(AActor* OtherActor)
 
 void AHordeLoot::TraceLine(AActor* OtherActor)
 {
-	// Aim Dir
-	FVector AimDir = FVector::ZeroVector;
-	FVector CamLoc;
-	FRotator CamRot;
-	OtherActor->GetActorEyesViewPoint(CamLoc, CamRot);
-	AimDir = CamRot.Vector();
+	//// Aim Dir
+	//FVector AimDir = FVector::ZeroVector;
+	//FVector CamLoc;
+	//FRotator CamRot;
+	//OtherActor->GetActorEyesViewPoint(CamLoc, CamRot);
+	//AimDir = CamRot.Vector();
 
-	// Start Trace 
-	FVector StartTrace = FVector::ZeroVector;
-	// Use player's camera
-	FRotator UnusedRot;
-	OtherActor->GetActorEyesViewPoint(StartTrace, UnusedRot);
-	// Adjust trace so there is nothing blocking the ray between the camera and the pawn, and calculate distance from adjusted start
-	StartTrace = StartTrace + AimDir * ((OtherActor->GetActorLocation() - StartTrace) | AimDir);
+	//// Start Trace 
+	//FVector StartTrace = FVector::ZeroVector;
+	//// Use player's camera
+	//FRotator UnusedRot;
+	//OtherActor->GetActorEyesViewPoint(StartTrace, UnusedRot);
+	//// Adjust trace so there is nothing blocking the ray between the camera and the pawn, and calculate distance from adjusted start
+	//StartTrace = StartTrace + AimDir * ((OtherActor->GetActorLocation() - StartTrace) | AimDir);
 
-	const FVector EndTrace = StartTrace + (AimDir * 1000);
+	//const FVector EndTrace = StartTrace + (AimDir * 1000);
 
-	DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::White, false, 0.5f, 0, 2.0f);
+	//DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::White, false, 0.5f, 0, 2.0f);
 
-	// Perform trace to retrieve hit info
-	FCollisionQueryParams TraceParams(FName(TEXT("Loot_Trace")), true);
-	TraceParams.bTraceAsyncScene = true;
+	//// Perform trace to retrieve hit info
+	//FCollisionQueryParams TraceParams(FName(TEXT("Loot_Trace")), true);
+	//TraceParams.bTraceAsyncScene = true;
 
-	FHitResult Hit(ForceInit);
-	if (ActorLineTraceSingle(Hit, StartTrace, EndTrace, ECC_WorldStatic, TraceParams))
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("The Component Being Hit is: %s"), *Hit.GetComponent()->GetName()));
-		if (Hit.GetComponent() == BoxComp)
-		{
-			Destroy();
-		}
-	}
+	//FHitResult Hit(ForceInit);
+	//if (ActorLineTraceSingle(Hit, StartTrace, EndTrace, ECC_WorldStatic, TraceParams))
+	//{
+	//	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("The Component Being Hit is: %s"), *Hit.GetComponent()->GetName()));
+	//	if (Hit.GetComponent() == BoxComp)
+	//	{
+	//		Destroy();
+	//	}
+	//}
 }
