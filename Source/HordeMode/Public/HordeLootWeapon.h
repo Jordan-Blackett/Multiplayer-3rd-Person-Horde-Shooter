@@ -19,6 +19,7 @@ class HORDEMODE_API AHordeLootWeapon : public AHordeLoot
 public:
 	AHordeLootWeapon();
 
+	void AddImpluse(FVector force);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

@@ -515,8 +515,8 @@ void AHordeCharacter::EquipInspectedLoot()
 			EquipWeapon(NewWeapon, true);
 
 			// Drop current weapon
-
-			// Create AHordeLootWeapon
+			//InspectedLoot.setWeapon;
+			MulticastThrowWeaponLoot(InspectedLoot);
 
 			// Replace current weapon inventory
 			Inventory[CurrentWeaponIdx] = NewWeapon;
@@ -524,11 +524,29 @@ void AHordeCharacter::EquipInspectedLoot()
 
 		// TODO: Vacuum
 
-
-
-		InspectedLoot->Destroy();
+		//InspectedLoot->Destroy();
 		InspectedLoot = nullptr;
 	}
+}
+
+void AHordeCharacter::ThrowWeaponLoot(AHordeLoot* WeaponLoot)
+{
+	if (WeaponLoot) {
+		FVector newLocation = GetActorLocation() + (GetActorForwardVector() * 100.0f); // TODO: variables
+		DrawDebugSphere(GetWorld(), newLocation, 1.0f, 5.0f, FColor::Red, false, 10.0f);
+		WeaponLoot->SetActorLocation(newLocation);
+		Cast<AHordeLootWeapon>(WeaponLoot)->AddImpluse(GetActorForwardVector() * 500.0f);
+	}
+}
+
+void AHordeCharacter::MulticastThrowWeaponLoot_Implementation(AHordeLoot* WeaponLoot)
+{
+	ThrowWeaponLoot(WeaponLoot);
+}
+
+bool AHordeCharacter::MulticastThrowWeaponLoot_Validate(AHordeLoot* WeaponLoot)
+{
+	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////

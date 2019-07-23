@@ -11,6 +11,11 @@ AHordeLootWeapon::AHordeLootWeapon()
 	MeshComp->SetupAttachment(SphereComp);
 }
 
+void AHordeLootWeapon::AddImpluse(FVector impluse)
+{
+	SphereComp->AddImpulse(impluse * SphereComp->GetMass());
+}
+
 void AHordeLootWeapon::BeginPlay()
 {
 	AHordeLoot::BeginPlay();
@@ -22,6 +27,7 @@ void AHordeLootWeapon::NotifyActorBeginOverlap(AActor * OtherActor)
 
 	if (Role == ROLE_Authority)
 	{
+
 		//Cast<AHordeCharacter>(OtherActor);
 
 

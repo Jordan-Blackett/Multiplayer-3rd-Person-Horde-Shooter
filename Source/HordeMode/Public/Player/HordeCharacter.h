@@ -207,6 +207,15 @@ protected:
 
 	UFUNCTION()
 	void EquipInspectedLoot();
+	
+	// [Server +  Client] Throw weapon
+	UFUNCTION()
+	void ThrowWeaponLoot(AHordeLoot* WeaponLoot);
+
+	UFUNCTION(reliable, NetMulticast, WithValidation)
+	void MulticastThrowWeaponLoot(AHordeLoot* WeaponLoot);
+	void MulticastThrowWeaponLoot_Implementation(AHordeLoot* WeaponLoot);
+	bool MulticastThrowWeaponLoot_Validate(AHordeLoot* WeaponLoot);
 
 
 	/** update targeting state */
