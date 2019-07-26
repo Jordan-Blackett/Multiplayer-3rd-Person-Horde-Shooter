@@ -12,6 +12,9 @@ class AHordeWeapon;
 class UHordeHealthComponent;
 class AHordeLoot;
 
+// OnAmmoChanged event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnCurrentWeaponAmmoChangedSignature, int32, ammo, int32, maxAmmo, int32, ammoInClip, int32, ammoPerClip);
+
 UCLASS()
 class HORDEMODE_API AHordeCharacter : public ACharacter
 {
@@ -61,6 +64,9 @@ public:
 
 	/** get weapon attach point */
 	FName GetWeaponEquipAttachPoint() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
+	AHordeWeapon* GetCurrentWeapon() const;
 
 protected:
 	// Called when the game starts or when spawned
@@ -116,6 +122,9 @@ protected:
 	UFUNCTION()
 	void OnHealthChanged(UHordeHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
+	UFUNCTION()
+	void OnAmmoChangedDelegate(int32 ammo, int32 maxAmmo, int32 ammoInClip, int32 ammoPerClip);
+
 	/* Pawn died previously */
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
 	bool bDied;
@@ -164,6 +173,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
 	FRotator GetAimOffsets() const;
+
+	//
+
+	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
+	FOnCurrentWeaponAmmoChangedSignature OnCurrentWeaponAmmoChanged;
 
 protected:
 

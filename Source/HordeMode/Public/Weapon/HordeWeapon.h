@@ -16,6 +16,9 @@ class UAudioComponent;
 class USoundCue;
 class UAnimMontage;
 
+// OnAmmoChanged event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnAmmoChangedSignature, int32, ammo, int32, maxAmmo, int32, ammoInClip, int32, ammoPerClip);
+
 namespace EWeaponState
 {
 	enum Type
@@ -484,4 +487,7 @@ public:
 
 	/** gets the duration of equipping weapon*/
 	float GetEquipDuration() const;
+
+	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
+	FOnAmmoChangedSignature OnAmmoChanged;
 };

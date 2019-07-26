@@ -50,10 +50,10 @@ void UHordeHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Dama
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("Damage %s"), *FString::SanitizeFloat(Damage));
-	if (IsFriendly(DamagedActor, DamageCauser))
-	{
-		return;
-	}
+	//if (IsFriendly(DamagedActor, DamageCauser))
+	//{
+	//	return;
+	//}
 
 	// Update health clamped
 	Health = FMath::Clamp(Health - Damage, 0.0f, DefaultHealth);

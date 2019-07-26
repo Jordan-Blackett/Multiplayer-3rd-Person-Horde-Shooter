@@ -9,6 +9,8 @@
 // OnHealthChanged event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthChangedSignature, UHordeHealthComponent*, OwningHealthComp, float, Health, float, HealthDelta, const class UDamageType*, DamageType, class AController*, InstigatedBy, AActor*, DamageCauser);
 
+// OnShieldChanged event
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnShieldChangedSignature, UHordeHealthComponent*, OwningHealthComp, float, Shield, float, HealthDelta, const class UDamageType*, DamageType, class AController*, InstigatedBy, AActor*, DamageCauser);
 
 UCLASS( ClassGroup=(HordeMode), meta=(BlueprintSpawnableComponent) )
 class HORDEMODE_API UHordeHealthComponent : public UActorComponent
@@ -47,6 +49,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnHealthChangedSignature OnHealthChanged;
+
+	//UPROPERTY(BlueprintAssignable, Category = "Events")
+	//FOnShieldChangedSignature OnShieldChanged;
 
 	UFUNCTION(BlueprintCallable, Category = "HealthComponent")
 	void Heal(float HealAmount);

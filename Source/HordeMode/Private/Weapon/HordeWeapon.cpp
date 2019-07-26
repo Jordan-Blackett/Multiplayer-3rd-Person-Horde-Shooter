@@ -90,6 +90,8 @@ void AHordeWeapon::OnEquip(const AHordeWeapon* LastWeapon)
 	}
 
 	//AHordeCharacter::NotifyEquipWeapon.Broadcast(MyPawn, this);
+
+	OnAmmoChanged.Broadcast(CurrentAmmo, WeaponConfig.MaxAmmo, CurrentAmmoInClip, WeaponConfig.AmmoPerClip);
 }
 
 void AHordeWeapon::OnEquipFinished()
@@ -457,10 +459,12 @@ void AHordeWeapon::UseAmmo()
 		CurrentAmmoInClip--;
 	}
 
-	if (!HasInfiniteAmmo() && !HasInfiniteClip())
+	if (!HasInfiniteAmmo() && HasInfiniteClip())
 	{
 		CurrentAmmo--;
 	}
+
+	OnAmmoChanged.Broadcast(CurrentAmmo, WeaponConfig.MaxAmmo, CurrentAmmoInClip, WeaponConfig.AmmoPerClip);
 
 	//AShooterAIController* BotAI = MyPawn ? Cast<AShooterAIController>(MyPawn->GetController()) : NULL;
 	//AShooterPlayerController* PlayerController = MyPawn ? Cast<AShooterPlayerController>(MyPawn->GetController()) : NULL;
@@ -517,12 +521,15 @@ void AHordeWeapon::ReloadWeapon()
 	if (ClipDelta > 0)
 	{
 		CurrentAmmoInClip += ClipDelta;
+		CurrentAmmo -= ClipDelta;
 	}
 
 	if (HasInfiniteClip())
 	{
 		CurrentAmmo = FMath::Max(CurrentAmmoInClip, CurrentAmmo);
 	}
+
+	OnAmmoChanged.Broadcast(CurrentAmmo, WeaponConfig.MaxAmmo, CurrentAmmoInClip, WeaponConfig.AmmoPerClip);
 }
 
 void AHordeWeapon::DetermineWeaponState()

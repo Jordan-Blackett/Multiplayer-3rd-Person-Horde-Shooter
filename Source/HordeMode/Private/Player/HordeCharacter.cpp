@@ -52,6 +52,8 @@ void AHordeCharacter::BeginPlay()
 	DefaultFOV = CameraComp->FieldOfView;
 
 	HealthComp->OnHealthChanged.AddDynamic(this, &AHordeCharacter::OnHealthChanged);
+	//HealthComp->OnHealthChanged.RemoveDynamic(this, &AHordeCharacter::OnHealthChanged);
+
 
 	if (Role == ROLE_Authority)
 	{
@@ -209,6 +211,11 @@ void AHordeCharacter::OnHealthChanged(UHordeHealthComponent* OwningHealthComp, f
 
 		SetLifeSpan(10.0f);
 	}
+}
+
+void AHordeCharacter::OnAmmoChangedDelegate(int32 ammo, int32 maxAmmo, int32 ammoInClip, int32 ammoPerClip)
+{
+	OnCurrentWeaponAmmoChanged.Broadcast(ammo, maxAmmo, ammoInClip, ammoPerClip);
 }
 
 // Called every frame
@@ -380,6 +387,8 @@ void AHordeCharacter::SetCurrentWeapon(AHordeWeapon* NewWeapon, bool NewLootWeap
 			// Hide current weapon
 			LocalLastWeapon->OnUnEquip(false);
 		}
+
+		LocalLastWeapon->OnAmmoChanged.RemoveDynamic(this, &AHordeCharacter::OnAmmoChangedDelegate);
 	}
 
 	CurrentWeapon = NewWeapon;
@@ -388,6 +397,8 @@ void AHordeCharacter::SetCurrentWeapon(AHordeWeapon* NewWeapon, bool NewLootWeap
 	if (NewWeapon)
 	{
 		NewWeapon->SetOwningPawn(this);	// Make sure weapon's MyPawn is pointing back to us. During replication, we can't guarantee APawn::CurrentWeapon will rep after AWeapon::MyPawn!
+
+		NewWeapon->OnAmmoChanged.AddDynamic(this, &AHordeCharacter::OnAmmoChangedDelegate);
 
 		NewWeapon->OnEquip(LastWeapon);
 	}
@@ -611,4 +622,9 @@ FName AHordeCharacter::GetWeaponAttachPoint() const
 FName AHordeCharacter::GetWeaponEquipAttachPoint() const
 {
 	return WeaponAttachEquipSocketName;
+}
+
+AHordeWeapon * AHordeCharacter::GetCurrentWeapon() const
+{
+	return CurrentWeapon;
 }
