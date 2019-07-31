@@ -387,6 +387,8 @@ void AHordeCharacter::SetCurrentWeapon(AHordeWeapon* NewWeapon, bool NewLootWeap
 			// Hide current weapon
 			LocalLastWeapon->OnUnEquip(false);
 		}
+		
+		LocalLastWeapon->SetReticleWidgetVisibility(false);
 
 		LocalLastWeapon->OnAmmoChanged.RemoveDynamic(this, &AHordeCharacter::OnAmmoChangedDelegate);
 	}
@@ -401,6 +403,8 @@ void AHordeCharacter::SetCurrentWeapon(AHordeWeapon* NewWeapon, bool NewLootWeap
 		NewWeapon->OnAmmoChanged.AddDynamic(this, &AHordeCharacter::OnAmmoChangedDelegate);
 
 		NewWeapon->OnEquip(LastWeapon);
+
+		NewWeapon->SetReticleWidgetVisibility(true);
 	}
 }
 
@@ -431,7 +435,7 @@ void AHordeCharacter::InspectActor()
 
 	const FVector EndTrace = StartTrace + (AimDir * 1000);
 
-	DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::White, false, 0.5f, 0, 2.0f);
+	//DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::White, false, 0.5f, 0, 2.0f);
 
 	// Perform trace to retrieve hit info
 	FCollisionQueryParams TraceParams(FName(TEXT("Loot_Trace")), true);
@@ -544,7 +548,7 @@ void AHordeCharacter::ThrowWeaponLoot(AHordeLoot* WeaponLoot)
 {
 	if (WeaponLoot) {
 		FVector newLocation = GetActorLocation() + (GetActorForwardVector() * 100.0f); // TODO: variables
-		DrawDebugSphere(GetWorld(), newLocation, 1.0f, 5.0f, FColor::Red, false, 10.0f);
+		//DrawDebugSphere(GetWorld(), newLocation, 1.0f, 5.0f, FColor::Red, false, 10.0f);
 		WeaponLoot->SetActorLocation(newLocation);
 		Cast<AHordeLootWeapon>(WeaponLoot)->AddImpluse(GetActorForwardVector() * 500.0f);
 	}

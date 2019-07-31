@@ -14,6 +14,7 @@
 #include "Animation/AnimMontage.h"
 #include "Sound/SoundCue.h"
 #include "Components/AudioComponent.h"
+#include "Blueprint/UserWidget.h"
 
 // Sets default values
 AHordeWeapon::AHordeWeapon()
@@ -43,9 +44,26 @@ void AHordeWeapon::PostInitializeComponents()
 		CurrentAmmo = WeaponConfig.AmmoPerClip * WeaponConfig.InitialClips;
 	}
 
-	MyPawn = Cast<AHordeCharacter>(GetOwner());
+	//MyPawn = Cast<AHordeCharacter>(GetOwner());
+	//if (MyPawn)
+	//{
+	//	if (MyPawn->GetController()->IsLocalController()) {
 
-	//DetachMeshFromPawn();
+
+	//		if (GetOwner())
+	//		{
+	//			if (GetOwner()->GetInstigatorController()->IsLocalController())//UGameplayStatics::GetPlayerController(GetWorld(), 0))GetWorld()->GetFirstPlayerController()->IsLocalPlayerController()
+	//			{
+	//				if (ReticleWidgetClass)
+	//				{
+	//					ReticleWidget = CreateWidget<UUserWidget>(GetWorld(), ReticleWidgetClass);
+	//					ReticleWidget->AddToViewport();
+	//					ReticleWidget->SetVisibility(ESlateVisibility::Hidden);
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 }
 
 void AHordeWeapon::Destroyed()
@@ -152,6 +170,17 @@ void AHordeWeapon::OnUnEquip(bool PrevWeapon)
 void AHordeWeapon::OnEnterInventory(AHordeCharacter* NewOwner)
 {
 	SetOwningPawn(NewOwner);
+
+	// Init Reticle
+	if(ReticleWidgetClass)
+	{
+		if (NewOwner->IsLocallyControlled())
+		{
+			ReticleWidget = CreateWidget<UUserWidget>(GetWorld(), ReticleWidgetClass);
+			ReticleWidget->AddToViewport();
+			ReticleWidget->SetVisibility(ESlateVisibility::Hidden);	
+		}
+	}
 }
 
 void AHordeWeapon::OnLeaveInventory()
@@ -886,6 +915,21 @@ float AHordeWeapon::GetEquipStartedTime() const
 //{
 //	return EquipDuration;
 //}
+
+void AHordeWeapon::SetReticleWidgetVisibility(bool hidden)
+{
+	if (ReticleWidget)
+	{
+		if (hidden)
+		{
+			ReticleWidget->SetVisibility(ESlateVisibility::Visible);
+		}
+		else
+		{
+			ReticleWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+}
 
 void AHordeWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

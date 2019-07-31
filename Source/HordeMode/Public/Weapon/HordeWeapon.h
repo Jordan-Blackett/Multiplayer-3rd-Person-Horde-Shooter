@@ -15,6 +15,7 @@ class UForceFeedbackEffect;
 class UAudioComponent;
 class USoundCue;
 class UAnimMontage;
+class UUserWidget;
 
 // OnAmmoChanged event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnAmmoChangedSignature, int32, ammo, int32, maxAmmo, int32, ammoInClip, int32, ammoPerClip);
@@ -143,6 +144,14 @@ protected:
 	/** is muzzle FX looped? */
 	UPROPERTY(EditDefaultsOnly, Category = Effects)
 	uint32 bLoopedMuzzleFX : 1;
+
+	/** Reticle UMG Widget */
+	UPROPERTY(EditDefaultsOnly, Category = Effects)
+	TSubclassOf<UUserWidget> ReticleWidgetClass;
+
+	/* Reference to created user widget*/
+	UPROPERTY()
+	class UUserWidget* ReticleWidget;
 
 	//////////////////////////////////////////////////////////////////////////
 	// Sound
@@ -490,4 +499,6 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 	FOnAmmoChangedSignature OnAmmoChanged;
+
+	void SetReticleWidgetVisibility(bool hidden);
 };

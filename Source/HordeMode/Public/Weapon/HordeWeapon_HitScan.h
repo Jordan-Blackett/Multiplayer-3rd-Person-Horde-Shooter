@@ -150,8 +150,8 @@ protected:
 	/** [local + server] update spread on firing */
 	virtual void OnBurstFinished() override;
 
-	/** get current spread */
-	float GetCurrentSpread() const;
+	///** get current spread */
+	//float GetCurrentSpread() const;
 
 	//////////////////////////////////////////////////////////////////////////
 	// Effects replication
@@ -167,4 +167,19 @@ protected:
 
 	/** spawn trail effect */
 	void SpawnTrailEffect(const FVector& EndPoint);
+
+public:
+	/** get current spread */
+	UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
+	float GetCurrentSpread() const;
+
+	// UI - Reticle - TODO REmove??
+
+	/** Get max spread */
+	UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
+	float GetMinSpread() const;
+
+	/** Get max spread */
+	UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
+	float GetMaxSpread() const;
 };

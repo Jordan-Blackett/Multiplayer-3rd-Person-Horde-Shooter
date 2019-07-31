@@ -229,6 +229,16 @@ float AHordeWeapon_HitScan::GetCurrentSpread() const
 	return FinalSpread;
 }
 
+float AHordeWeapon_HitScan::GetMinSpread() const
+{
+	return HitScanConfig.WeaponSpread;
+}
+
+float AHordeWeapon_HitScan::GetMaxSpread() const
+{
+	return HitScanConfig.FiringSpreadMax;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Replication & effects
 
