@@ -17,6 +17,7 @@
 #include "DrawDebugHelpers.h"
 #include "HordeLoot.h"
 #include "HordeLootWeapon.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 AHordeCharacter::AHordeCharacter()
@@ -227,6 +228,13 @@ void AHordeCharacter::Tick(float DeltaTime)
 	float NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
 
 	CameraComp->SetFieldOfView(NewFOV);
+
+	if (CurrentWeapon)
+	{
+		// 0 - 1
+		float MovementSpread = GetVelocity().Size() / GetCharacterMovement()->GetMaxSpeed();
+		CurrentWeapon->SetCurrentSpread(MovementSpread);
+	}
 }
 
 FVector AHordeCharacter::GetPawnViewLocation() const

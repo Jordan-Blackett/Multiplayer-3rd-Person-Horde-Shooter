@@ -500,5 +500,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 	FOnAmmoChangedSignature OnAmmoChanged;
 
+	virtual void SetCurrentSpread(float spread);
+
 	void SetReticleWidgetVisibility(bool hidden);
+
 };

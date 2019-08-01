@@ -229,6 +229,38 @@ float AHordeWeapon_HitScan::GetCurrentSpread() const
 	return FinalSpread;
 }
 
+void AHordeWeapon_HitScan::SetCurrentSpread(float spread)
+{
+	if (spread > 0) {
+		float inRangeA = 0;
+		float inRangeB = 1;
+
+		float outRangeA = GetMinSpread();
+		float outRangeB = GetMaxSpread();
+
+		float clampedValue = FMath::Clamp(spread, inRangeB, inRangeA);
+
+		float inRange = inRangeA - inRangeB;
+		float correctedInValue = clampedValue - inRangeB;
+		float inPercentage = (correctedInValue) / inRange;
+
+		float maprangedclamped = (inPercentage * (outRangeA - outRangeB)) + outRangeB;
+
+		CurrentFiringSpread = FMath::Max(maprangedclamped, CurrentFiringSpread);	
+	}
+	else
+	{
+		if (CurrentState != EWeaponState::Firing)
+		{
+			CurrentFiringSpread = spread;
+		}
+		else
+		{
+			CurrentFiringSpread = FMath::Max(spread, CurrentFiringSpread);
+		}
+	}
+}
+
 float AHordeWeapon_HitScan::GetMinSpread() const
 {
 	return HitScanConfig.WeaponSpread;

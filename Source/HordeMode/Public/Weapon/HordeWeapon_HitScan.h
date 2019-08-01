@@ -173,6 +173,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
 	float GetCurrentSpread() const;
 
+	void SetCurrentSpread(float spread) override;
+
 	// UI - Reticle - TODO REmove??
 
 	/** Get max spread */

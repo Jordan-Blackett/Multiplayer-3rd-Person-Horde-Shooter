@@ -916,6 +916,10 @@ float AHordeWeapon::GetEquipStartedTime() const
 //	return EquipDuration;
 //}
 
+void AHordeWeapon::SetCurrentSpread(float spread)
+{
+}
+
 void AHordeWeapon::SetReticleWidgetVisibility(bool hidden)
 {
 	if (ReticleWidget)
