@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystem.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "HordeMode.h"
@@ -15,12 +16,64 @@
 #include "Sound/SoundCue.h"
 #include "Components/AudioComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "Player/HordePlayerController.h"
 
 // Sets default values
 AHordeWeapon::AHordeWeapon()
 {
-	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
-	RootComponent = MeshComp;
+	BaseMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BaseMeshComp"));
+	RootComponent = BaseMeshComp;
+
+	//MeshComp->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+	BaseMeshComp->bReceivesDecals = false;
+	BaseMeshComp->CastShadow = true;
+	BaseMeshComp->SetCollisionObjectType(ECC_WorldDynamic);
+	BaseMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BaseMeshComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+	BaseMeshComp->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Block);
+	BaseMeshComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	//MeshComp->SetCollisionResponseToChannel(COLLISION_PROJECTILE, ECR_Block);
+
+	// Weapon Parts
+
+	BarrelMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BarrelMeshComp"));
+	BarrelMeshComp->SetupAttachment(BaseMeshComp, "BarrelSocket");
+	BarrelMeshComp->bReceivesDecals = false;
+	BarrelMeshComp->CastShadow = true;
+	BarrelMeshComp->SetCollisionObjectType(ECC_WorldDynamic);
+	BarrelMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BarrelMeshComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+	BarrelMeshComp->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Block);
+	BarrelMeshComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+
+	StockMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StockMeshComp"));
+	StockMeshComp->SetupAttachment(BaseMeshComp, "StockSocket");
+	StockMeshComp->bReceivesDecals = false;
+	StockMeshComp->CastShadow = true;
+	StockMeshComp->SetCollisionObjectType(ECC_WorldDynamic);
+	StockMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	StockMeshComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+	StockMeshComp->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Block);
+	StockMeshComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+
+	GripMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GripMeshComp"));
+	GripMeshComp->SetupAttachment(BaseMeshComp, "GripSocket");
+	GripMeshComp->bReceivesDecals = false;
+	GripMeshComp->CastShadow = true;
+	GripMeshComp->SetCollisionObjectType(ECC_WorldDynamic);
+	GripMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GripMeshComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+	GripMeshComp->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Block);
+	GripMeshComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+
+	bLoopedMuzzleFX = false;
+	bLoopedFireAnim = false;
+	bPlayingFireAnim = false;
+	bIsEquipped = false;
+	bWantsToFire = false;
+	bPendingReload = false;
+	bPendingEquip = false;
+	CurrentState = EWeaponState::Idle;
 
 	CurrentAmmo = 0;
 	CurrentAmmoInClip = 0;
@@ -38,43 +91,19 @@ void AHordeWeapon::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	if (WeaponConfig.InitialClips > 0)
-	{
-		CurrentAmmoInClip = WeaponConfig.AmmoPerClip;
-		CurrentAmmo = WeaponConfig.AmmoPerClip * WeaponConfig.InitialClips;
-	}
-
-	//MyPawn = Cast<AHordeCharacter>(GetOwner());
-	//if (MyPawn)
-	//{
-	//	if (MyPawn->GetController()->IsLocalController()) {
-
-
-	//		if (GetOwner())
-	//		{
-	//			if (GetOwner()->GetInstigatorController()->IsLocalController())//UGameplayStatics::GetPlayerController(GetWorld(), 0))GetWorld()->GetFirstPlayerController()->IsLocalPlayerController()
-	//			{
-	//				if (ReticleWidgetClass)
-	//				{
-	//					ReticleWidget = CreateWidget<UUserWidget>(GetWorld(), ReticleWidgetClass);
-	//					ReticleWidget->AddToViewport();
-	//					ReticleWidget->SetVisibility(ESlateVisibility::Hidden);
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
+	CurrentAmmoInClip = WeaponConfig.AmmoPerClip;
 }
 
 void AHordeWeapon::Destroyed()
 {
 	Super::Destroyed();
 
-	//StopSimulatingWeaponFire();
+	StopSimulatingWeaponFire();
 }
 
 //////////////////////////////////////////////////////////////////////////
-// Inventory
+// Inventory /////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
 void AHordeWeapon::OnEquip(const AHordeWeapon* LastWeapon)
 {
@@ -86,7 +115,7 @@ void AHordeWeapon::OnEquip(const AHordeWeapon* LastWeapon)
 	// Only play animation if last weapon is valid
 	if (LastWeapon)
 	{
-		float Duration = PlayWeaponAnimation(EquipAnim);
+		float Duration = PlayWeaponAnimation(EquipAnimation);
 		if (Duration <= 0.0f)
 		{
 			// failsafe
@@ -108,8 +137,6 @@ void AHordeWeapon::OnEquip(const AHordeWeapon* LastWeapon)
 	}
 
 	//AHordeCharacter::NotifyEquipWeapon.Broadcast(MyPawn, this);
-
-	OnAmmoChanged.Broadcast(CurrentAmmo, WeaponConfig.MaxAmmo, CurrentAmmoInClip, WeaponConfig.AmmoPerClip);
 }
 
 void AHordeWeapon::OnEquipFinished()
@@ -131,23 +158,20 @@ void AHordeWeapon::OnEquipFinished()
 		{
 			StartReload();
 		}
+
+		SetReticleWidgetVisibility(true);
+		OnAmmoChanged.Broadcast(CurrentAmmo, 0, CurrentAmmoInClip, WeaponConfig.AmmoPerClip);
 	}
 }
 
-void AHordeWeapon::OnUnEquip(bool PrevWeapon)
+void AHordeWeapon::OnUnEquip()
 {
-	if (PrevWeapon)	{
-		AttachMeshToPawnPrevEquipSocket();
-	} else {
-		DetachMeshFromPawn();
-	}
-
 	bIsEquipped = false;
 	StopFire();
 
 	if (bPendingReload)
 	{
-		StopWeaponAnimation(ReloadAnim);
+		StopWeaponAnimation(ReloadAnimation);
 		bPendingReload = false;
 
 		GetWorldTimerManager().ClearTimer(TimerHandle_StopReload);
@@ -156,7 +180,7 @@ void AHordeWeapon::OnUnEquip(bool PrevWeapon)
 
 	if (bPendingEquip)
 	{
-		StopWeaponAnimation(EquipAnim);
+		StopWeaponAnimation(EquipAnimation);
 		bPendingEquip = false;
 
 		GetWorldTimerManager().ClearTimer(TimerHandle_OnEquipFinished);
@@ -177,8 +201,11 @@ void AHordeWeapon::OnEnterInventory(AHordeCharacter* NewOwner)
 		if (NewOwner->IsLocallyControlled())
 		{
 			ReticleWidget = CreateWidget<UUserWidget>(GetWorld(), ReticleWidgetClass);
-			ReticleWidget->AddToViewport();
-			ReticleWidget->SetVisibility(ESlateVisibility::Hidden);	
+			if(ReticleWidget)
+			{
+				ReticleWidget->AddToViewport();
+				ReticleWidget->SetVisibility(ESlateVisibility::Hidden);		
+			}
 		}
 	}
 }
@@ -187,7 +214,7 @@ void AHordeWeapon::OnLeaveInventory()
 {
 	if (IsAttachedToPawn())
 	{
-		OnUnEquip(false);
+		OnUnEquip();
 	}
 
 	if (Role == ROLE_Authority)
@@ -208,8 +235,8 @@ void AHordeWeapon::AttachMeshToPawn()
 		if (MyPawn->IsLocallyControlled() == true)
 		{
 			USkeletalMeshComponent* PawnMesh = MyPawn->GetMesh();
-			MeshComp->SetHiddenInGame(false);
-			MeshComp->AttachToComponent(PawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+			BaseMeshComp->SetHiddenInGame(false);
+			BaseMeshComp->AttachToComponent(PawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
 		}
 		else
 		{
@@ -223,8 +250,8 @@ void AHordeWeapon::AttachMeshToPawn()
 
 void AHordeWeapon::DetachMeshFromPawn()
 {
-	MeshComp->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
-	MeshComp->SetHiddenInGame(true);
+	BaseMeshComp->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+	BaseMeshComp->SetHiddenInGame(true);
 }
 
 void AHordeWeapon::AttachMeshToPawnPrevEquipSocket()
@@ -239,8 +266,8 @@ void AHordeWeapon::AttachMeshToPawnPrevEquipSocket()
 		if (MyPawn->IsLocallyControlled() == true)
 		{
 			USkeletalMeshComponent* PawnMesh = MyPawn->GetMesh();
-			MeshComp->SetHiddenInGame(false);
-			MeshComp->AttachToComponent(PawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
+			BaseMeshComp->SetHiddenInGame(false);
+			BaseMeshComp->AttachToComponent(PawnMesh, FAttachmentTransformRules::KeepRelativeTransform, AttachPoint);
 		}
 		else
 		{
@@ -252,13 +279,22 @@ void AHordeWeapon::AttachMeshToPawnPrevEquipSocket()
 	}
 }
 
+void AHordeWeapon::OnEquipToPlayerBack()
+{
+	AttachMeshToPawnPrevEquipSocket();
+}
+
+void AHordeWeapon::OnUnEquipFromPlayerBack()
+{
+	DetachMeshFromPawn();
+}
+
 //////////////////////////////////////////////////////////////////////////
-// Input
+// Input /////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
 void AHordeWeapon::StartFire()
 {
-	UE_LOG(LogTemp, Warning, TEXT("StartFire"));
-
 	if (Role < ROLE_Authority)
 	{
 		ServerStartFire();
@@ -297,7 +333,7 @@ void AHordeWeapon::StartReload(bool bFromReplication)
 		bPendingReload = true;
 		DetermineWeaponState();
 
-		float AnimDuration = PlayWeaponAnimation(ReloadAnim);
+		float AnimDuration = PlayWeaponAnimation(ReloadAnimation);
 		if (AnimDuration <= 0.0f)
 		{
 			AnimDuration = WeaponConfig.NoAnimReloadDuration;
@@ -322,9 +358,13 @@ void AHordeWeapon::StopReload()
 	{
 		bPendingReload = false;
 		DetermineWeaponState();
-		StopWeaponAnimation(ReloadAnim);
+		StopWeaponAnimation(ReloadAnimation);
 	}
 }
+
+//////////////////////////////////////////////////////////////////////////
+// Input - Server Side ///////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
 void AHordeWeapon::ServerStartFire_Implementation()
 {
@@ -361,36 +401,128 @@ void AHordeWeapon::ServerStopReload_Implementation()
 	StopReload();
 }
 
-void AHordeWeapon::ClientStartReload_Implementation()
-{
-	StartReload();
-}
-
 bool AHordeWeapon::ServerStopReload_Validate()
 {
 	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
-// Control
+// Replication & Client-Side Effects /////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
-bool AHordeWeapon::CanFire() const
+void AHordeWeapon::OnRep_MyPawn()
 {
-	bool bCanFire = true; //MyPawn && MyPawn->CanFire();
-	bool bStateOKToFire = ((CurrentState == EWeaponState::Idle) || (CurrentState == EWeaponState::Firing));
-	return ((bCanFire == true) && (bStateOKToFire == true) && (bPendingReload == false));
+	if (MyPawn)
+	{
+		OnEnterInventory(MyPawn);
+	}
+	else
+	{
+		OnLeaveInventory();
+	}
 }
 
-bool AHordeWeapon::CanReload() const
+void AHordeWeapon::OnRep_BurstCounter()
 {
-	bool bCanReload = true; //(!MyPawn || MyPawn->CanReload());
-	bool bGotAmmo = (CurrentAmmoInClip < WeaponConfig.AmmoPerClip) && (CurrentAmmo - CurrentAmmoInClip > 0 || HasInfiniteClip());
-	bool bStateOKToReload = ((CurrentState == EWeaponState::Idle) || (CurrentState == EWeaponState::Firing));
-	return ((bCanReload == true) && (bGotAmmo == true) && (bStateOKToReload == true));
+	if (BurstCounter > 0)
+	{
+		SimulateWeaponFire();
+	}
+	else
+	{
+		StopSimulatingWeaponFire();
+	}
+}
+
+void AHordeWeapon::OnRep_Reload()
+{
+	if (bPendingReload)
+	{
+		StartReload(true);
+	}
+	else
+	{
+		StopReload();
+	}
+}
+
+void AHordeWeapon::SimulateWeaponFire()
+{
+	if (Role == ROLE_Authority && CurrentState != EWeaponState::Firing)
+	{
+		return;
+	}
+
+	if (MuzzleFX)
+	{
+		USkeletalMeshComponent* UseWeaponMesh = GetWeaponMesh();
+		if (!bLoopedMuzzleFX || MuzzlePSC == NULL)
+		{
+			MuzzlePSC = UGameplayStatics::SpawnEmitterAttached(MuzzleFX, UseWeaponMesh, MuzzleAttachPoint);
+		}
+	}
+
+	if (!bLoopedFireAnim || !bPlayingFireAnim)
+	{
+		PlayWeaponAnimation(FireAnimation);
+		bPlayingFireAnim = true;
+	}
+
+	if (bLoopedFireSound)
+	{
+		if (FireAC == NULL)
+		{
+			FireAC = PlayWeaponSound(FireLoopSound);
+		}
+	}
+	else
+	{
+		PlayWeaponSound(FireSound);
+	}
+
+	AHordePlayerController* PC = (MyPawn != NULL) ? Cast<AHordePlayerController>(MyPawn->Controller) : NULL;
+	if (PC != NULL && PC->IsLocalController())
+	{
+		if (FireCameraShake != NULL)
+		{
+			PC->ClientPlayCameraShake(FireCameraShake, 1);
+		}
+		if (FireForceFeedback != NULL)// && PC->IsVibrationEnabled())
+		{
+			PC->ClientPlayForceFeedback(FireForceFeedback, false, false, "Weapon");
+		}
+	}
+}
+
+void AHordeWeapon::StopSimulatingWeaponFire()
+{
+	if (bLoopedMuzzleFX)
+	{
+		if (MuzzlePSC != NULL)
+		{
+			MuzzlePSC->DeactivateSystem();
+			MuzzlePSC = NULL;
+		}
+	}
+
+	if (bLoopedFireAnim && bPlayingFireAnim)
+	{
+		StopWeaponAnimation(FireAnimation);
+		bPlayingFireAnim = false;
+	}
+
+	if (FireAC)
+	{
+		FireAC->FadeOut(0.1f, 0.0f);
+		FireAC = NULL;
+
+		PlayWeaponSound(FireFinishSound);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
-// Weapon usage
+// Weapon Usage //////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
 void AHordeWeapon::HandleFiring()
 {
@@ -493,55 +625,13 @@ void AHordeWeapon::UseAmmo()
 		CurrentAmmo--;
 	}
 
-	OnAmmoChanged.Broadcast(CurrentAmmo, WeaponConfig.MaxAmmo, CurrentAmmoInClip, WeaponConfig.AmmoPerClip);
-
-	//AShooterAIController* BotAI = MyPawn ? Cast<AShooterAIController>(MyPawn->GetController()) : NULL;
-	//AShooterPlayerController* PlayerController = MyPawn ? Cast<AShooterPlayerController>(MyPawn->GetController()) : NULL;
-	//if (BotAI)
-	//{
-	//	BotAI->CheckAmmo(this);
-	//}
-	//else if (PlayerController)
-	//{
-	//	AShooterPlayerState* PlayerState = Cast<AShooterPlayerState>(PlayerController->PlayerState);
-	//	switch (GetAmmoType())
-	//	{
-	//	case EAmmoType::ERocket:
-	//		PlayerState->AddRocketsFired(1);
-	//		break;
-	//	case EAmmoType::EBullet:
-	//	default:
-	//		PlayerState->AddBulletsFired(1);
-	//		break;
-	//	}
-	//}
+	OnAmmoChanged.Broadcast(MyPawn->GetCurrentAmmo(GetAmmoType()), MyPawn->GetMaxAmmo(GetAmmoType()), CurrentAmmoInClip, WeaponConfig.AmmoPerClip);
 }
-
-//void AHordeWeapon::GiveAmmo(int AddAmount)
-//{
-//	//const int32 MissingAmmo = FMath::Max(0, WeaponConfig.MaxAmmo - CurrentAmmo);
-//	//AddAmount = FMath::Min(AddAmount, MissingAmmo);
-//	//CurrentAmmo += AddAmount;
-//
-//	//AShooterAIController* BotAI = MyPawn ? Cast<AShooterAIController>(MyPawn->GetController()) : NULL;
-//	//if (BotAI)
-//	//{
-//	//	BotAI->CheckAmmo(this);
-//	//}
-//
-//	//// start reload if clip was empty
-//	//if (GetCurrentAmmoInClip() <= 0 &&
-//	//	CanReload() &&
-//	//	MyPawn && (MyPawn->GetWeapon() == this))
-//	//{
-//	//	ClientStartReload();
-//	//}
-//}
 
 void AHordeWeapon::ReloadWeapon()
 {
-	int32 ClipDelta = FMath::Min(WeaponConfig.AmmoPerClip - CurrentAmmoInClip, CurrentAmmo - CurrentAmmoInClip);
-
+	int32 ClipDelta = WeaponConfig.AmmoPerClip - CurrentAmmoInClip;
+	
 	if (HasInfiniteClip())
 	{
 		ClipDelta = WeaponConfig.AmmoPerClip - CurrentAmmoInClip;
@@ -549,16 +639,15 @@ void AHordeWeapon::ReloadWeapon()
 
 	if (ClipDelta > 0)
 	{
-		CurrentAmmoInClip += ClipDelta;
-		CurrentAmmo -= ClipDelta;
+		CurrentAmmoInClip += MyPawn->ReceiveAmmo(GetAmmoType(), ClipDelta);
 	}
 
 	if (HasInfiniteClip())
 	{
-		CurrentAmmo = FMath::Max(CurrentAmmoInClip, CurrentAmmo);
+		//CurrentAmmo = FMath::Max(CurrentAmmoInClip, CurrentAmmo);
 	}
 
-	OnAmmoChanged.Broadcast(CurrentAmmo, WeaponConfig.MaxAmmo, CurrentAmmoInClip, WeaponConfig.AmmoPerClip);
+	OnAmmoChanged.Broadcast(MyPawn->GetCurrentAmmo(GetAmmoType()), MyPawn->GetMaxAmmo(GetAmmoType()), CurrentAmmoInClip, WeaponConfig.AmmoPerClip);
 }
 
 void AHordeWeapon::DetermineWeaponState()
@@ -640,7 +729,8 @@ void AHordeWeapon::OnBurstFinished()
 }
 
 //////////////////////////////////////////////////////////////////////////
-// Weapon usage helpers
+// Weapon usage helpers //////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
 UAudioComponent* AHordeWeapon::PlayWeaponSound(USoundCue* Sound)
 {
@@ -742,117 +832,27 @@ void AHordeWeapon::SetOwningPawn(AHordeCharacter* NewOwner)
 }
 
 //////////////////////////////////////////////////////////////////////////
-// Replication & effects
+// Control ///////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
-void AHordeWeapon::OnRep_MyPawn()
+bool AHordeWeapon::CanFire() const
 {
-	//if (MyPawn)
-	//{
-	//	OnEnterInventory(MyPawn);
-	//}
-	//else
-	//{
-	//	OnLeaveInventory();
-	//}
+	bool bCanFire = true; //MyPawn && MyPawn->CanFire();
+	bool bStateOKToFire = ((CurrentState == EWeaponState::Idle) || (CurrentState == EWeaponState::Firing));
+	return ((bCanFire == true) && (bStateOKToFire == true) && (bPendingReload == false));
 }
 
-void AHordeWeapon::OnRep_BurstCounter()
+bool AHordeWeapon::CanReload() const
 {
-	if (BurstCounter > 0)
-	{
-		SimulateWeaponFire();
-	}
-	else
-	{
-		StopSimulatingWeaponFire();
-	}
+	bool bCanReload = true; //(!MyPawn || MyPawn->CanReload());
+	bool bGotAmmo = (CurrentAmmoInClip < WeaponConfig.AmmoPerClip) && ((MyPawn->GetCurrentAmmo(GetAmmoType()) - CurrentAmmoInClip) > 0 || HasInfiniteClip());
+	bool bStateOKToReload = ((CurrentState == EWeaponState::Idle) || (CurrentState == EWeaponState::Firing));
+	return ((bCanReload == true) && (bGotAmmo == true) && (bStateOKToReload == true));
 }
 
-void AHordeWeapon::OnRep_Reload()
-{
-	if (bPendingReload)
-	{
-		StartReload(true);
-	}
-	else
-	{
-		StopReload();
-	}
-}
-
-void AHordeWeapon::SimulateWeaponFire()
-{
-	if (Role == ROLE_Authority && CurrentState != EWeaponState::Firing)
-	{
-		return;
-	}
-
-	if (MuzzleFX)
-	{
-		USkeletalMeshComponent* UseWeaponMesh = GetWeaponMesh();
-		if (!bLoopedMuzzleFX || MuzzlePSC == NULL)
-		{
-			MuzzlePSC = UGameplayStatics::SpawnEmitterAttached(MuzzleFX, UseWeaponMesh, MuzzleAttachPoint);
-		}
-	}
-
-	if (!bLoopedFireAnim || !bPlayingFireAnim)
-	{
-		PlayWeaponAnimation(FireAnim);
-		bPlayingFireAnim = true;
-	}
-
-	if (bLoopedFireSound)
-	{
-		if (FireAC == NULL)
-		{
-			FireAC = PlayWeaponSound(FireLoopSound);
-		}
-	}
-	else
-	{
-		PlayWeaponSound(FireSound);
-	}
-
-	//AShooterPlayerController* PC = (MyPawn != NULL) ? Cast<AShooterPlayerController>(MyPawn->Controller) : NULL;
-	//if (PC != NULL && PC->IsLocalController())
-	//{
-	//	if (FireCameraShake != NULL)
-	//	{
-	//		PC->ClientPlayCameraShake(FireCameraShake, 1);
-	//	}
-	//	if (FireForceFeedback != NULL && PC->IsVibrationEnabled())
-	//	{
-	//		PC->ClientPlayForceFeedback(FireForceFeedback, false, false, "Weapon");
-	//	}
-	//}
-}
-
-void AHordeWeapon::StopSimulatingWeaponFire()
-{
-	if (bLoopedMuzzleFX)
-	{
-		if (MuzzlePSC != NULL)
-		{
-			MuzzlePSC->DeactivateSystem();
-			MuzzlePSC = NULL;
-		}
-	}
-
-	if (bLoopedFireAnim && bPlayingFireAnim)
-	{
-		StopWeaponAnimation(FireAnim);
-		bPlayingFireAnim = false;
-	}
-
-	if (FireAC)
-	{
-		FireAC->FadeOut(0.1f, 0.0f);
-		FireAC = NULL;
-
-		PlayWeaponSound(FireFinishSound);
-	}
-}
+//////////////////////////////////////////////////////////////////////////
+// Reading Data  /////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
 bool AHordeWeapon::IsEquipped() const
 {
@@ -886,12 +886,12 @@ int32 AHordeWeapon::GetAmmoPerClip() const
 
 int32 AHordeWeapon::GetMaxAmmo() const
 {
-	return WeaponConfig.MaxAmmo;
+	return 0;
 }
 
 USkeletalMeshComponent * AHordeWeapon::GetWeaponMesh() const
 {
-	return MeshComp;
+	return BaseMeshComp;
 }
 
 bool AHordeWeapon::HasInfiniteAmmo() const
@@ -911,10 +911,10 @@ float AHordeWeapon::GetEquipStartedTime() const
 	return EquipStartedTime;
 }
 
-//float AHordeWeapon::GetEquipDuration() const
-//{
-//	return EquipDuration;
-//}
+float AHordeWeapon::GetEquipDuration() const
+{
+	return EquipDuration;
+}
 
 void AHordeWeapon::SetCurrentSpread(float spread)
 {

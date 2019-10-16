@@ -6,6 +6,7 @@
 #include "HordeCharacter.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Effects/HordeImpactEffect.h"
 
 void AHordeWeapon_HitScan::FireWeapon()
 {
@@ -220,11 +221,12 @@ void AHordeWeapon_HitScan::OnBurstFinished()
 
 float AHordeWeapon_HitScan::GetCurrentSpread() const
 {
-	float FinalSpread = HitScanConfig.WeaponSpread + CurrentFiringSpread;
-	//if (MyPawn) // && MyPawn->IsTargeting())
-	//{
-	//	FinalSpread *= HitScanConfig.TargetingSpreadMod;
-	//}
+	float FinalSpread = HitScanConfig.BaseWeaponSpread + CurrentFiringSpread;
+	if (MyPawn && MyPawn->GetIsAiming())
+	{
+		//FinalSpread *= HitScanConfig.TargetingSpreadMod;
+		FinalSpread = FMath::Max(0.0f, FinalSpread * HitScanConfig.AimingSpreadModifier);
+	}
 
 	return FinalSpread;
 }
@@ -263,7 +265,7 @@ void AHordeWeapon_HitScan::SetCurrentSpread(float spread)
 
 float AHordeWeapon_HitScan::GetMinSpread() const
 {
-	return HitScanConfig.WeaponSpread;
+	return 0.0f;
 }
 
 float AHordeWeapon_HitScan::GetMaxSpread() const
@@ -303,27 +305,27 @@ void AHordeWeapon_HitScan::SimulateInstantHit(const FVector& ShotOrigin, int32 R
 
 void AHordeWeapon_HitScan::SpawnImpactEffects(const FHitResult& Impact)
 {
-	//if (ImpactTemplate && Impact.bBlockingHit)
-	//{
-	//	FHitResult UseImpact = Impact;
+	if (ImpactTemplate && Impact.bBlockingHit)
+	{
+		FHitResult UseImpact = Impact;
 
-	//	// trace again to find component lost during replication
-	//	if (!Impact.Component.IsValid())
-	//	{
-	//		const FVector StartTrace = Impact.ImpactPoint + Impact.ImpactNormal * 10.0f;
-	//		const FVector EndTrace = Impact.ImpactPoint - Impact.ImpactNormal * 10.0f;
-	//		FHitResult Hit = WeaponTrace(StartTrace, EndTrace);
-	//		UseImpact = Hit;
-	//	}
+		// trace again to find component lost during replication
+		if (!Impact.Component.IsValid())
+		{
+			const FVector StartTrace = Impact.ImpactPoint + Impact.ImpactNormal * 10.0f;
+			const FVector EndTrace = Impact.ImpactPoint - Impact.ImpactNormal * 10.0f;
+			FHitResult Hit = WeaponTrace(StartTrace, EndTrace);
+			UseImpact = Hit;
+		}
 
-	//	FTransform const SpawnTransform(Impact.ImpactNormal.Rotation(), Impact.ImpactPoint);
-	//	AShooterImpactEffect* EffectActor = GetWorld()->SpawnActorDeferred<AShooterImpactEffect>(ImpactTemplate, SpawnTransform);
-	//	if (EffectActor)
-	//	{
-	//		EffectActor->SurfaceHit = UseImpact;
-	//		UGameplayStatics::FinishSpawningActor(EffectActor, SpawnTransform);
-	//	}
-	//}
+		FTransform const SpawnTransform(Impact.ImpactNormal.Rotation(), Impact.ImpactPoint);
+		//AHordeImpactEffect* EffectActor = GetWorld()->SpawnActorDeferred<AHordeImpactEffect>(ImpactTemplate, SpawnTransform);
+		//if (EffectActor)
+		//{
+		//	EffectActor->SurfaceHit = UseImpact;
+		//	UGameplayStatics::FinishSpawningActor(EffectActor, SpawnTransform);
+		//}
+	}
 }
 
 void AHordeWeapon_HitScan::SpawnTrailEffect(const FVector& EndPoint)

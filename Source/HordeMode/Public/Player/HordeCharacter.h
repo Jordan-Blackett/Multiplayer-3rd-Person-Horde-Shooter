@@ -11,6 +11,7 @@ class USpringArmComponent;
 class AHordeWeapon;
 class UHordeHealthComponent;
 class AHordeLoot;
+enum class EAmmoType : uint8;
 
 // OnAmmoChanged event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnCurrentWeaponAmmoChangedSignature, int32, ammo, int32, maxAmmo, int32, ammoInClip, int32, ammoPerClip);
@@ -27,7 +28,8 @@ public:
 public:
 
 	//////////////////////////////////////////////////////////////////////////
-	// Inventory
+	// Inventory /////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 
 	// [Server] Add weapon to inventory
 	void AddWeapon(class AHordeWeapon* Weapon);
@@ -42,13 +44,14 @@ public:
 	class AHordeWeapon* FindWeapon(TSubclassOf<class AHordeWeapon> WeaponClass);
 
 	//////////////////////////////////////////////////////////////////////////
-	// Input handlers
+	// Input handlers ////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 
 	// Player pressed equip weapon action
+	void OnEquipWeapon0();
 	void OnEquipWeapon1();
 	void OnEquipWeapon2();
 	void OnEquipWeapon3();
-	void OnEquipWeapon4();
 
 	// Player pressed next weapon action
 	void OnNextWeapon();
@@ -89,6 +92,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UHordeHealthComponent* HealthComp;
 
+	UPROPERTY(Replicated)
 	bool bWantsToZoom;
 
 	/* Default FOV set during begin play */
@@ -108,7 +112,7 @@ protected:
 	AHordeWeapon* CurrentWeapon;
 
 	UPROPERTY(Replicated)
-	AHordeWeapon* PrevWeapon;
+	AHordeWeapon* PreviousWeapon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TSubclassOf<AHordeWeapon> StarterWeaponClass;
@@ -174,10 +178,44 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
 	FRotator GetAimOffsets() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
+	bool GetIsAiming() const;
+
 	//
 
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 	FOnCurrentWeaponAmmoChangedSignature OnCurrentWeaponAmmoChanged;
+
+	//////////////////////////////////////////////////////////////////////////
+	// Ammo //////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
+
+	UPROPERTY(EditDefaultsOnly, Category = "Ammo")
+	int32 MaxPistolAmmo;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Ammo")
+	int32 MaxAssaultRifleAmmo;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Ammo")
+	int32 MaxShotgunAmmo;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Ammo")
+	int32 MaxSniperAmmo;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Ammo")
+	int32 MaxExplosiveAmmo;
+
+	int32 CurrentPistolAmmo;
+	int32 CurrentAssaultRifleAmmo;
+	int32 CurrentShotgunAmmo;
+	int32 CurrentSniperAmmo;
+	int32 CurrentExplosiveAmmo;
+
+	int32 ReceiveAmmo(EAmmoType AmmoType, int32 AmmoCount);
+	void GiveAmmo(EAmmoType AmmoType, int32 AmmoCount);
+
+	int32 GetMaxAmmo(EAmmoType AmmoType);
+	int32 GetCurrentAmmo(EAmmoType AmmoType);
 
 protected:
 
@@ -197,7 +235,7 @@ protected:
 	bool ServerEquipWeapon_Validate(class AHordeWeapon* NewWeapon);
 
 	// Updates current weapon
-	void SetCurrentWeapon(class AHordeWeapon* NewWeapon, bool NewLootWeapon, class AHordeWeapon* LastWeapon = NULL);
+	void SetCurrentWeapon(class AHordeWeapon* NewWeapon, bool NewLootWeapon, class AHordeWeapon* CurrentWeapon1);
 
 	// Current weapon rep handler
 	UFUNCTION()

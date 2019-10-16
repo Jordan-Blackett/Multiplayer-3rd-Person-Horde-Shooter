@@ -7,6 +7,7 @@
 #include "HordeWeapon_HitScan.generated.h"
 
 class UDamageType;
+class AHordeImpactEffect;
 
 USTRUCT()
 struct FInstantHitInfo
@@ -30,11 +31,11 @@ struct FInstantWeaponData
 
 	/** base weapon spread (degrees) */
 	UPROPERTY(EditDefaultsOnly, Category = Accuracy)
-	float WeaponSpread;
+	float BaseWeaponSpread;
 
 	/** targeting spread modifier */
 	UPROPERTY(EditDefaultsOnly, Category = Accuracy)
-	float TargetingSpreadMod;
+	float AimingSpreadModifier;
 
 	/** continuous firing: spread increment */
 	UPROPERTY(EditDefaultsOnly, Category = Accuracy)
@@ -52,6 +53,14 @@ struct FInstantWeaponData
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
 	int32 HitDamage;
 
+	/** Critical damage modifier */
+	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
+	float CriticalHitDamageModifier;
+
+	/** Critical damage modifier */
+	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
+	float FumbleHitDamageModifier;
+
 	/** type of damage */
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
 	TSubclassOf<UDamageType> DamageType;
@@ -67,12 +76,14 @@ struct FInstantWeaponData
 	/** defaults */
 	FInstantWeaponData()
 	{
-		WeaponSpread = 5.0f;
-		TargetingSpreadMod = 0.25f;
+		BaseWeaponSpread = 5.0f;
+		AimingSpreadModifier = 0.25f;
 		FiringSpreadIncrement = 1.0f;
 		FiringSpreadMax = 10.0f;
 		WeaponRange = 10000.0f;
 		HitDamage = 10;
+		CriticalHitDamageModifier = 2.0f;
+		FumbleHitDamageModifier = 0.75f;
 		DamageType = UDamageType::StaticClass();
 		ClientSideHitLeeway = 200.0f;
 		AllowedViewDotHitDir = 0.8f;
@@ -99,8 +110,8 @@ protected:
 	FInstantWeaponData HitScanConfig;
 
 	/** impact effects */
-	//UPROPERTY(EditDefaultsOnly, Category = Effects)
-	//TSubclassOf<AShooterImpactEffect> ImpactTemplate;
+	UPROPERTY(EditDefaultsOnly, Category = Effects)
+	TSubclassOf<AHordeImpactEffect> ImpactTemplate;
 
 	/** smoke trail */
 	UPROPERTY(EditDefaultsOnly, Category = Effects)

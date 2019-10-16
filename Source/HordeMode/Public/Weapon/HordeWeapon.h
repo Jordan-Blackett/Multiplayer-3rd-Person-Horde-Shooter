@@ -17,7 +17,7 @@ class USoundCue;
 class UAnimMontage;
 class UUserWidget;
 
-// OnAmmoChanged event
+// OnAmmoChanged event - TODO: remove and just call pawn->nNotifyOutOfAmmo
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnAmmoChangedSignature, int32, ammo, int32, maxAmmo, int32, ammoInClip, int32, ammoPerClip);
 
 namespace EWeaponState
@@ -31,10 +31,24 @@ namespace EWeaponState
 	};
 }
 
+UENUM(BlueprintType)
+enum class EAmmoType : uint8 {
+	ENone,
+	EPistol,
+	EAssaultRifle,
+	EShotgun,
+	ESniper,
+	EExplosive,
+};
+
 USTRUCT()
 struct FWeaponData
 {
 	GENERATED_USTRUCT_BODY()
+
+	/** */
+	UPROPERTY(EditDefaultsOnly, Category = Ammo)
+	EAmmoType AmmoType;
 
 	/** inifite ammo for reloads */
 	UPROPERTY(EditDefaultsOnly, Category = Ammo)
@@ -44,17 +58,9 @@ struct FWeaponData
 	UPROPERTY(EditDefaultsOnly, Category = Ammo)
 	bool bInfiniteClip;
 
-	/** max ammo */
-	UPROPERTY(EditDefaultsOnly, Category = Ammo)
-	int32 MaxAmmo;
-
 	/** clip size */
 	UPROPERTY(EditDefaultsOnly, Category = Ammo)
 	int32 AmmoPerClip;
-
-	/** initial clips */
-	UPROPERTY(EditDefaultsOnly, Category = Ammo)
-	int32 InitialClips;
 
 	/** time between two consecutive shots */
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
@@ -67,11 +73,10 @@ struct FWeaponData
 	/** defaults */
 	FWeaponData()
 	{
+		EAmmoType EAmmoType = EAmmoType::ENone;
 		bInfiniteAmmo = false;
 		bInfiniteClip = false;
-		MaxAmmo = 100;
 		AmmoPerClip = 20;
-		InitialClips = 4;
 		TimeBetweenShots = 0.2f;
 		NoAnimReloadDuration = 1.0f;
 	}
@@ -110,7 +115,16 @@ protected:
 	virtual void Destroyed() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	USkeletalMeshComponent* MeshComp;
+	USkeletalMeshComponent* BaseMeshComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStaticMeshComponent* BarrelMeshComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStaticMeshComponent* StockMeshComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStaticMeshComponent* GripMeshComp;
 
 	/** pawn owner */
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_MyPawn)
@@ -121,94 +135,100 @@ protected:
 	FWeaponData WeaponConfig;
 
 	//////////////////////////////////////////////////////////////////////////
-	// Effects
+	// Effects ///////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 
-	/** spawned component for muzzle FX */
+	// Spawned Component For Muzzle FX */
 	UPROPERTY(Transient)
 	UParticleSystemComponent* MuzzlePSC;
 
+	// Muzzle Socket Attach Name
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
 	FName MuzzleAttachPoint;
 
-	/** FX for muzzle flash */
-	UPROPERTY(EditDefaultsOnly, Category = Effects)
+	// FX for muzzle flash
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	UParticleSystem* MuzzleFX;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
-	TSubclassOf<UCameraShake> FireCamShake;
-
-	/** force feedback effect to play when the weapon is fired */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
-	UForceFeedbackEffect *FireForceFeedback;
-
-	/** is muzzle FX looped? */
-	UPROPERTY(EditDefaultsOnly, Category = Effects)
+	// is muzzle FX looped?
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	uint32 bLoopedMuzzleFX : 1;
 
-	/** Reticle UMG Widget */
-	UPROPERTY(EditDefaultsOnly, Category = Effects)
+	// 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
+	TSubclassOf<UCameraShake> FireCameraShake;
+
+	// force feedback effect to play when the weapon is fired
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
+	UForceFeedbackEffect* FireForceFeedback;
+
+	// Reticle UMG Widget
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	TSubclassOf<UUserWidget> ReticleWidgetClass;
 
-	/* Reference to created user widget*/
-	UPROPERTY()
+	// Reference to created user widget*/
+	UPROPERTY(Transient)
 	class UUserWidget* ReticleWidget;
 
 	//////////////////////////////////////////////////////////////////////////
-	// Sound
+	// Sound /////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 
 	/** firing audio (bLoopedFireSound set) */
 	UPROPERTY(Transient)
 	UAudioComponent* FireAC;
 
 	/** single fire sound (bLoopedFireSound not set) */
-	UPROPERTY(EditDefaultsOnly, Category = Sound)
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	USoundCue* FireSound;
 
 	/** looped fire sound (bLoopedFireSound set) */
-	UPROPERTY(EditDefaultsOnly, Category = Sound)
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	USoundCue* FireLoopSound;
 
 	/** finished burst sound (bLoopedFireSound set) */
-	UPROPERTY(EditDefaultsOnly, Category = Sound)
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	USoundCue* FireFinishSound;
 
 	/** out of ammo sound */
-	UPROPERTY(EditDefaultsOnly, Category = Sound)
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	USoundCue* OutOfAmmoSound;
 
 	/** reload sound */
-	UPROPERTY(EditDefaultsOnly, Category = Sound)
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	USoundCue* ReloadSound;
 
 	/** equip sound */
-	UPROPERTY(EditDefaultsOnly, Category = Sound)
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	USoundCue* EquipSound;
 
 	/** is fire sound looped? */
-	UPROPERTY(EditDefaultsOnly, Category = Sound)
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	uint32 bLoopedFireSound : 1;
 
 	//////////////////////////////////////////////////////////////////////////
-	// Animation
+	// Animation /////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 
-	/** equip animations */
-	UPROPERTY(EditDefaultsOnly, Category = Animation)
-	UAnimMontage* EquipAnim;
+	// Equip animations
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	UAnimMontage* EquipAnimation;
 
-	/** fire animations */
-	UPROPERTY(EditDefaultsOnly, Category = Animation)
-	UAnimMontage* FireAnim;
+	// Fire animations
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	UAnimMontage* FireAnimation;
 
-	/** reload animations */
-	UPROPERTY(EditDefaultsOnly, Category = Animation)
-	UAnimMontage* ReloadAnim;
+	// Reload animations
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	UAnimMontage* ReloadAnimation;
 
-	/** is fire animation looped? */
-	UPROPERTY(EditDefaultsOnly, Category = Animation)
+	// Is fire animation looped?
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	uint32 bLoopedFireAnim : 1;
 
 	//////////////////////////////////////////////////////////////////////////
-	// 
+	// ///////// /////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 
 	/** is fire animation playing? */
 	uint32 bPlayingFireAnim : 1;
@@ -266,7 +286,8 @@ protected:
 	FTimerHandle TimerHandle_ReloadWeapon;
 
 	//////////////////////////////////////////////////////////////////////////
-	// Input - server side
+	// Input - Server Side ///////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerStartFire();
@@ -289,7 +310,8 @@ protected:
 	bool ServerStopReload_Validate();
 
 	//////////////////////////////////////////////////////////////////////////
-	// Replication & effects
+	// Replication & Client-Side Effects /////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 
 	UFUNCTION()
 	void OnRep_MyPawn();
@@ -307,12 +329,13 @@ protected:
 	virtual void StopSimulatingWeaponFire();
 
 	//////////////////////////////////////////////////////////////////////////
-	// Weapon usage
+	// Weapon Usage //////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 
-	/** [local] weapon specific fire implementation */
+	/** [Local] Weapon specific fire implementation */
 	virtual void FireWeapon() PURE_VIRTUAL(AShooterWeapon::FireWeapon, );
 
-	/** [server] fire & update ammo */
+	/** [Server] fire & update ammo */
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerHandleFiring();
 	void ServerHandleFiring_Implementation();
@@ -334,19 +357,17 @@ protected:
 	void DetermineWeaponState();
 
 	//////////////////////////////////////////////////////////////////////////
-	// Inventory
-
-	/** attaches weapon mesh to pawn's mesh */
-	void AttachMeshToPawn();
-
-	/** detaches weapon mesh from pawn */
-	void DetachMeshFromPawn();
-
-	/** detaches weapon mesh from pawn */
-	void AttachMeshToPawnPrevEquipSocket();
-
+	// Weapon usage helpers //////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
-	// Weapon usage helpers
+
+	/** Get the aim of the camera */
+	//FVector GetCameraAim() const;
+
+	/** Get the aim of the weapon, allowing for adjustments to be made by the weapon */
+	virtual FVector GetAdjustedAim() const;
+
+	/** get the originating location for camera damage */
+	FVector GetCameraDamageStartLocation(const FVector& AimDir) const;
 
 	/** play weapon sounds */
 	UAudioComponent* PlayWeaponSound(USoundCue* Sound);
@@ -356,15 +377,6 @@ protected:
 
 	/** stop playing weapon animations */
 	void StopWeaponAnimation(UAnimMontage* Animation);
-
-	/** Get the aim of the weapon, allowing for adjustments to be made by the weapon */
-	virtual FVector GetAdjustedAim() const;
-
-	/** Get the aim of the camera */
-	FVector GetCameraAim() const;
-
-	/** get the originating location for camera damage */
-	FVector GetCameraDamageStartLocation(const FVector& AimDir) const;
 
 	/** get the muzzle location of the weapon */
 	FVector GetMuzzleLocation() const;
@@ -376,31 +388,39 @@ protected:
 	FHitResult WeaponTrace(const FVector& TraceFrom, const FVector& TraceTo) const;
 
 	//////////////////////////////////////////////////////////////////////////
-	// Ammo
+	// Ammo //////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 
-	//enum class EAmmoType
-	//{
-	//	EBullet,
-	//	ERocket,
-	//	EMax,
-	//};
-
-	/** [server] add ammo */
-	//void GiveAmmo(int AddAmount);
-
-	/** consume a bullet */
+	/** Consume a bullet */
 	void UseAmmo();
 
+	/** [server] performs actual reload */
+	virtual void ReloadWeapon();
+
 	/** query ammo type */
-	//virtual EAmmoType GetAmmoType() const
-	//{
-	//	return EAmmoType::EBullet;
-	//}
+	virtual EAmmoType GetAmmoType() const
+	{
+		return WeaponConfig.AmmoType;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// Inventory /////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
+
+	/** attaches weapon mesh to pawn's mesh */
+	void AttachMeshToPawn();
+
+	/** detaches weapon mesh from pawn */
+	void DetachMeshFromPawn();
+
+	/** detaches weapon mesh from pawn */
+	void AttachMeshToPawnPrevEquipSocket();
 
 public:	
 
 	//////////////////////////////////////////////////////////////////////////
-	// Input
+	// Input /////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 
 	/** [local + server] start weapon fire */
 	virtual void StartFire();
@@ -414,16 +434,9 @@ public:
 	/** [local + server] interrupt weapon reload */
 	virtual void StopReload();
 
-	/** [server] performs actual reload */
-	virtual void ReloadWeapon();
-
-	/** trigger reload from server */
-	UFUNCTION(reliable, client)
-	void ClientStartReload();
-	void ClientStartReload_Implementation();
-
 	//////////////////////////////////////////////////////////////////////////
-	// Control
+	// Control ///////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 
 	/** check if weapon can fire */
 	bool CanFire() const;
@@ -432,7 +445,8 @@ public:
 	bool CanReload() const;
 
 	//////////////////////////////////////////////////////////////////////////
-	// Inventory
+	// Inventory /////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 
 	/** weapon is being equipped by owner pawn */
 	virtual void OnEquip(const AHordeWeapon* LastWeapon);
@@ -441,7 +455,7 @@ public:
 	virtual void OnEquipFinished();
 
 	/** weapon is holstered by owner pawn */
-	virtual void OnUnEquip(bool PrevWeapon);
+	virtual void OnUnEquip();
 
 	/** [server] weapon was added to pawn's inventory */
 	virtual void OnEnterInventory(AHordeCharacter* NewOwner);
@@ -455,11 +469,13 @@ public:
 	/** check if mesh is already attached */
 	bool IsAttachedToPawn() const;
 
-	//////////////////////////////////////////////////////////////////////////
-	// 
+	void OnEquipToPlayerBack();
+
+	void OnUnEquipFromPlayerBack();
 
 	//////////////////////////////////////////////////////////////////////////
-	// Reading data
+	// Reading Data //////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 
 	/** get current weapon state */
 	EWeaponState::Type GetCurrentState() const;
@@ -479,14 +495,17 @@ public:
 	/** get max ammo amount */
 	int32 GetMaxAmmo() const;
 
-	/** get weapon mesh (needs pawn owner to determine variant) */
-	USkeletalMeshComponent* GetWeaponMesh() const;
-
 	/** check if weapon has infinite ammo (include owner's cheats) */
 	bool HasInfiniteAmmo() const;
 
 	/** check if weapon has infinite clip (include owner's cheats) */
 	bool HasInfiniteClip() const;
+
+	//////////////////////////////////////////////////////////////////////////
+	// Reading data - 
+
+	/** get weapon mesh (needs pawn owner to determine variant) */
+	USkeletalMeshComponent* GetWeaponMesh() const;
 
 	/** set the weapon's owning pawn */
 	void SetOwningPawn(AHordeCharacter* AHordeCharacter);

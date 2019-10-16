@@ -43,6 +43,14 @@ AHordeCharacter::AHordeCharacter()
 
 	WeaponAttachSocketName = "WeaponSocket";
 	WeaponAttachEquipSocketName = "BackEquipSocket";
+
+	MaxPistolAmmo = 600;
+	MaxAssaultRifleAmmo = 400;
+	MaxShotgunAmmo = 100;
+	MaxSniperAmmo = 50;
+	MaxExplosiveAmmo = 25;
+
+	CurrentAssaultRifleAmmo = MaxAssaultRifleAmmo;
 }
 
 // Called when the game starts or when spawned
@@ -56,20 +64,10 @@ void AHordeCharacter::BeginPlay()
 	//HealthComp->OnHealthChanged.RemoveDynamic(this, &AHordeCharacter::OnHealthChanged);
 
 
+
 	if (Role == ROLE_Authority)
 	{
 		InitialiseDefaultInventory();
-
-		//// Spawn a default weapon
-		//FActorSpawnParameters SpawnParams;
-		//SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		//CurrentWeapon = GetWorld()->SpawnActor<AHordeWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-		//if (CurrentWeapon)
-		//{
-		//	CurrentWeapon->SetOwningPawn(this);
-		//	CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocketName);
-		//}
 
 		GetWorld()->GetTimerManager().SetTimer(TraceLineTimerHandle, this, &AHordeCharacter::InspectActor, 0.5f, true);
 	}
@@ -141,6 +139,9 @@ void AHordeCharacter::MoveRight(float Value)
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////
+//
+
 void AHordeCharacter::BeginCrouch()
 {
 	Crouch();
@@ -198,6 +199,98 @@ FRotator AHordeCharacter::GetAimOffsets() const
 	return AimRotLS;
 }
 
+bool AHordeCharacter::GetIsAiming() const
+{
+	return bWantsToZoom;
+}
+
+int32 AHordeCharacter::ReceiveAmmo(EAmmoType AmmoType, int32 AmmoCount)
+{
+	int32* TempAmmo = new int();
+	switch (AmmoType)
+	{
+	case EAmmoType::EPistol:
+		TempAmmo = &CurrentPistolAmmo;
+		break;
+	case EAmmoType::EAssaultRifle:
+		TempAmmo = &CurrentAssaultRifleAmmo;
+		break;
+	case EAmmoType::EShotgun:
+		TempAmmo = &CurrentShotgunAmmo;
+		break;
+	case EAmmoType::ESniper:
+		TempAmmo = &CurrentShotgunAmmo;
+		break;
+	case EAmmoType::EExplosive:
+		TempAmmo = &CurrentShotgunAmmo;
+		break;
+	default:
+		TempAmmo = 0;
+		break;
+	}
+
+	int32 AmmoDelta = FMath::Max(0, AmmoCount - *TempAmmo);
+	*TempAmmo = FMath::Max(0, *TempAmmo - AmmoCount);
+	return AmmoCount - AmmoDelta;
+}
+
+void AHordeCharacter::GiveAmmo(EAmmoType AmmoType, int32 AmmoCount)
+{
+	//const int32 MissingAmmo = FMath::Max(0, WeaponConfig.MaxAmmo - CurrentAmmo);
+	//AddAmount = FMath::Min(AddAmount, MissingAmmo);
+	//CurrentAmmo += AddAmount;
+}
+
+int32 AHordeCharacter::GetMaxAmmo(EAmmoType AmmoType)
+{
+	switch (AmmoType)
+	{
+	case EAmmoType::EPistol:
+		return MaxPistolAmmo;
+		break;
+	case EAmmoType::EAssaultRifle:
+		return MaxAssaultRifleAmmo;
+		break;
+	case EAmmoType::EShotgun:
+		return MaxShotgunAmmo;
+		break;
+	case EAmmoType::ESniper:
+		return MaxSniperAmmo;
+		break;
+	case EAmmoType::EExplosive:
+		return MaxExplosiveAmmo;
+		break;
+	default:
+		return 0;
+		break;
+	}
+}
+
+int32 AHordeCharacter::GetCurrentAmmo(EAmmoType AmmoType)
+{
+	switch (AmmoType)
+	{
+	case EAmmoType::EPistol:
+		return CurrentPistolAmmo;
+		break;
+	case EAmmoType::EAssaultRifle:
+		return CurrentAssaultRifleAmmo;
+		break;
+	case EAmmoType::EShotgun:
+		return CurrentShotgunAmmo;
+		break;
+	case EAmmoType::ESniper:
+		return CurrentSniperAmmo;
+		break;
+	case EAmmoType::EExplosive:
+		return CurrentExplosiveAmmo;
+		break;
+	default:
+		return 0;
+		break;
+	}
+}
+
 void AHordeCharacter::OnHealthChanged(UHordeHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (Health <= 0.0f && !bDied)
@@ -224,6 +317,8 @@ void AHordeCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// TODO: is local
+
 	float TargetFOV = bWantsToZoom ? ZoomedFOV : DefaultFOV;
 	float NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
 
@@ -231,7 +326,7 @@ void AHordeCharacter::Tick(float DeltaTime)
 
 	if (CurrentWeapon)
 	{
-		// 0 - 1
+		// [0 - 1]
 		float MovementSpread = GetVelocity().Size() / GetCharacterMovement()->GetMaxSpeed();
 		CurrentWeapon->SetCurrentSpread(MovementSpread);
 	}
@@ -255,6 +350,7 @@ void AHordeCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME_CONDITION(AHordeCharacter, Inventory, COND_OwnerOnly);
 
 	DOREPLIFETIME(AHordeCharacter, CurrentWeapon);
+	DOREPLIFETIME(AHordeCharacter, bWantsToZoom);
 	DOREPLIFETIME(AHordeCharacter, bDied);
 }
 
@@ -268,6 +364,7 @@ void AHordeCharacter::InitialiseDefaultInventory()
 		return;
 	}
 
+	// Add weapons to inventory
 	int32 NumWeapons = DefaultInventory.Num();
 	for (int32 i = 0; i < NumWeapons; i++)
 	{
@@ -362,43 +459,33 @@ bool AHordeCharacter::ServerEquipWeapon_Validate(AHordeWeapon* Weapon)
 	return true;
 }
 
-void AHordeCharacter::SetCurrentWeapon(AHordeWeapon* NewWeapon, bool NewLootWeapon, AHordeWeapon* LastWeapon)
+void AHordeCharacter::SetCurrentWeapon(AHordeWeapon* NewWeapon, bool NewPickedUpWeapon, AHordeWeapon* CurrentWeapon1)
 {
-	AHordeWeapon* LocalLastWeapon = nullptr;
-	//AHordeWeapon* LocalLastWeapon = PrevWeapon;
-
-	if (LastWeapon != NULL)
+	// Unequip Current Weapon
+	if (CurrentWeapon1)
 	{
-		LocalLastWeapon = LastWeapon;
-	}
-	else if (NewWeapon != CurrentWeapon)
-	{
-		LocalLastWeapon = CurrentWeapon;
-	}
-
-	// Unequip previous
-	if (LocalLastWeapon)
-	{
-		if (!NewLootWeapon)
+		if (!NewPickedUpWeapon)
 		{
 			// Hide current weapon and place it on the back
-			LocalLastWeapon->OnUnEquip(true);
-			if (PrevWeapon)
+			CurrentWeapon1->OnUnEquip();
+			CurrentWeapon1->OnEquipToPlayerBack();
+			if (PreviousWeapon)
 			{
 				// Hide on back weapon
-				PrevWeapon->OnUnEquip(false);
+				PreviousWeapon->OnUnEquip();
+				PreviousWeapon->OnUnEquipFromPlayerBack();
 			}
-			PrevWeapon = LocalLastWeapon;
+			PreviousWeapon = CurrentWeapon;
 		}
 		else
 		{
-			// Hide current weapon
-			LocalLastWeapon->OnUnEquip(false);
+			// Replace current weapon with pickedup weapon
+			CurrentWeapon1->OnUnEquip();
+			CurrentWeapon1->OnUnEquipFromPlayerBack();
 		}
 		
-		LocalLastWeapon->SetReticleWidgetVisibility(false);
-
-		LocalLastWeapon->OnAmmoChanged.RemoveDynamic(this, &AHordeCharacter::OnAmmoChangedDelegate);
+		CurrentWeapon1->SetReticleWidgetVisibility(false);
+		CurrentWeapon1->OnAmmoChanged.RemoveDynamic(this, &AHordeCharacter::OnAmmoChangedDelegate);
 	}
 
 	CurrentWeapon = NewWeapon;
@@ -407,18 +494,17 @@ void AHordeCharacter::SetCurrentWeapon(AHordeWeapon* NewWeapon, bool NewLootWeap
 	if (NewWeapon)
 	{
 		NewWeapon->SetOwningPawn(this);	// Make sure weapon's MyPawn is pointing back to us. During replication, we can't guarantee APawn::CurrentWeapon will rep after AWeapon::MyPawn!
-
-		NewWeapon->OnAmmoChanged.AddDynamic(this, &AHordeCharacter::OnAmmoChangedDelegate);
-
-		NewWeapon->OnEquip(LastWeapon);
+		
+		NewWeapon->OnEquip(CurrentWeapon1); // TODO: why send last weapon
 
 		NewWeapon->SetReticleWidgetVisibility(true);
+		NewWeapon->OnAmmoChanged.AddDynamic(this, &AHordeCharacter::OnAmmoChangedDelegate);
 	}
 }
 
 void AHordeCharacter::OnRep_CurrentWeapon(AHordeWeapon* LastWeapon)
 {
-	SetCurrentWeapon(CurrentWeapon, LastWeapon);
+	//SetCurrentWeapon(CurrentWeapon, false, LastWeapon);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -575,6 +661,10 @@ bool AHordeCharacter::MulticastThrowWeaponLoot_Validate(AHordeLoot* WeaponLoot)
 //////////////////////////////////////////////////////////////////////////
 // Input handlers
 
+void AHordeCharacter::OnEquipWeapon0()
+{
+}
+
 void AHordeCharacter::OnEquipWeapon1()
 {
 
@@ -586,11 +676,6 @@ void AHordeCharacter::OnEquipWeapon2()
 }
 
 void AHordeCharacter::OnEquipWeapon3()
-{
-
-}
-
-void AHordeCharacter::OnEquipWeapon4()
 {
 
 }
