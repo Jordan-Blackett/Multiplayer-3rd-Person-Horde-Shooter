@@ -894,6 +894,27 @@ USkeletalMeshComponent * AHordeWeapon::GetWeaponMesh() const
 	return BaseMeshComp;
 }
 
+
+void AHordeWeapon::SetWeaponBaseMesh(USkeletalMesh * BaseMesh)
+{
+	BaseMeshComp->SetSkeletalMesh(BaseMesh);
+}
+
+void AHordeWeapon::SetWeaponBarrelMesh(UStaticMesh * BarrelMesh)
+{
+	BarrelMeshComp->SetStaticMesh(BarrelMesh);
+}
+
+void AHordeWeapon::SetWeaponStockMesh(UStaticMesh * StockMesh)
+{
+	StockMeshComp->SetStaticMesh(StockMesh);
+}
+
+void AHordeWeapon::SetWeaponGripMesh(UStaticMesh * GripMesh)
+{
+	GripMeshComp->SetStaticMesh(GripMesh);
+}
+
 bool AHordeWeapon::HasInfiniteAmmo() const
 {
 	//const AShooterPlayerController* MyPC = (MyPawn != NULL) ? Cast<const AShooterPlayerController>(MyPawn->Controller) : NULL;

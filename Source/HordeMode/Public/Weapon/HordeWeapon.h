@@ -17,6 +17,8 @@ class USoundCue;
 class UAnimMontage;
 class UUserWidget;
 
+class USkeletalMesh;
+
 // OnAmmoChanged event - TODO: remove and just call pawn->nNotifyOutOfAmmo
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnAmmoChangedSignature, int32, ammo, int32, maxAmmo, int32, ammoInClip, int32, ammoPerClip);
 
@@ -506,6 +508,14 @@ public:
 
 	/** get weapon mesh (needs pawn owner to determine variant) */
 	USkeletalMeshComponent* GetWeaponMesh() const;
+
+	//////////////////////////////////////////////////////////////////////////
+	//  Weapon Construction - 
+
+	void SetWeaponBaseMesh(USkeletalMesh* BaseMesh);
+	void SetWeaponBarrelMesh(UStaticMesh* BarrelMesh);
+	void SetWeaponStockMesh(UStaticMesh* StockMesh);
+	void SetWeaponGripMesh(UStaticMesh* GripMesh);
 
 	/** set the weapon's owning pawn */
 	void SetOwningPawn(AHordeCharacter* AHordeCharacter);

@@ -15,23 +15,135 @@
 //	ESniper,
 //	EExplosive,
 //};
-//
+
+class UHordeLootTable;
+
 USTRUCT()
-struct FWeaponPartData
+struct FLootTableData
 {
 	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
+public:
+	UPROPERTY()
 	float Probability;
 
-	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
-	UStaticMesh* GripMesh;
+	UPROPERTY(EditDefaultsOnly)
+	float ExtraProbability;
 
-	/** defaults */
-	FWeaponPartData()
+	FLootTableData()
 	{
-		Probability = 0.0f;
-		GripMesh = nullptr;
+		Probability = 1.0f;
+		ExtraProbability = 0.0f;
+	}
+};
+
+USTRUCT()
+struct FLootTableWeaponData : public FLootTableData
+{
+	GENERATED_USTRUCT_BODY()
+
+public:
+	// Weapon Stats
+	float test;
+};
+
+
+USTRUCT()
+struct FWeaponBaseData : public FLootTableWeaponData
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	USkeletalMesh* BaseMesh;
+};
+
+USTRUCT()
+struct FWeaponPartData : public FLootTableWeaponData
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	UStaticMesh* PartMesh;
+
+	UPROPERTY(EditDefaultsOnly)
+	USkeletalMesh* BaseMesh;
+};
+
+USTRUCT()
+struct FWeaponPoolData : public FLootTableWeaponData
+{
+	GENERATED_USTRUCT_BODY()
+
+	//UPROPERTY(EditDefaultsOnly)
+	//TArray<FWeaponBaseData> WeaponBase;
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FWeaponPartData> WeaponPartsBase;
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FWeaponPartData> WeaponPartsBarrels;
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FWeaponPartData> WeaponPartsStocks;
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FWeaponPartData> WeaponPartsGrip;
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FWeaponPartData> WeaponPartsSight;
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FWeaponPartData> WeaponPartsAccessories;
+};
+
+USTRUCT()
+struct FRarityData
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY()
+	float Probability;
+
+	UPROPERTY(EditDefaultsOnly)
+	float ExtraProbability;
+
+	UPROPERTY(EditDefaultsOnly)
+	float StatDelta;
+};
+
+USTRUCT()
+struct FSelectedWeaponParts {
+
+	GENERATED_USTRUCT_BODY()
+
+	//FWeaponBaseData SelectedBase;
+	FWeaponPartData SelectedBase;
+	FWeaponPartData SelectedBarrelPart;
+	FWeaponPartData SelectedStockPart;
+	FWeaponPartData SelectedGripPart;
+
+	FSelectedWeaponParts() { ; }
+	FSelectedWeaponParts(FWeaponPoolData& Pool)
+	{
+		SelectedBase = SelectLootFromWeaponPartsPool(Pool.WeaponPartsBase);
+		SelectedBarrelPart = SelectLootFromWeaponPartsPool(Pool.WeaponPartsBarrels);
+		SelectedStockPart = SelectLootFromWeaponPartsPool(Pool.WeaponPartsStocks);
+		SelectedGripPart = SelectLootFromWeaponPartsPool(Pool.WeaponPartsGrip);
+	}
+
+	template <typename T>
+	T SelectLootFromWeaponPartsPool(TArray<T>& Pool)
+	{
+		float Roll = FMath::FRand();
+		for (T Part : Pool)
+		{
+			if (Roll <= Part.Probability)
+			{
+				return Part;
+			}
+		}
+
+		return Pool[0];
 	}
 };
 
@@ -44,15 +156,30 @@ public:
 	// Sets default values for this component's properties
 	UHordeLootTable();
 
+	UPROPERTY(EditDefaultsOnly, Category = "Rarity")
+	TArray<FRarityData> RarityPool;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon Parts")
-	TArray<FWeaponPartData> WeaponPartsBarrels;
+	FWeaponPoolData WeaponAssaultRiflePool;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon Parts")
+	FWeaponPoolData WeaponSMGPool;
+
+
+public:
+	UFUNCTION(BlueprintCallable, Category = "LootTable")
+	void GenerateLoot();
+
+private:
+	void SetWeaponPoolProbability(FWeaponPoolData& Pool);
+	
+	template <typename T>
+	void SetWeaponPartsPoolProbality(TArray<T>& Pool);
+
+	void ContructWeapon(FSelectedWeaponParts& SelectedParts);
 
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 };
