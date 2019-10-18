@@ -4,6 +4,7 @@
 #include "Engine/World.h"
 #include "HordeWeapon.h"
 #include "HordeWeapon_HitScan.h"
+#include "HordeLootWeapon.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values for this component's properties
@@ -49,27 +50,25 @@ void UHordeLootTable::SetWeaponPoolProbability(FWeaponPoolData & Pool)
 {
 	Pool.Probability = 1;
 
-	//SetWeaponPartsPoolProbality(Pool.WeaponBase);
-	//SetWeaponPartsPoolProbality(Pool.WeaponPartsBarrels);
+	SetWeaponPartsPoolProbality(Pool.WeaponPartsBase);
+	SetWeaponPartsPoolProbality(Pool.WeaponPartsBarrels);
+	SetWeaponPartsPoolProbality(Pool.WeaponPartsStocks);
+	SetWeaponPartsPoolProbality(Pool.WeaponPartsGrip);
 }
 
-template <typename T>
-void UHordeLootTable::SetWeaponPartsPoolProbality(TArray<T>& Pool)
+void UHordeLootTable::SetWeaponPartsPoolProbality(TArray<FWeaponPartData>& Pool)
 {
-	float PartProbability = 1 / Pool.Num();
-	for (T Parts : Pool)
+	uint8 Len = Pool.Num();
+	float PartProbability = 1.0f / Len;
+	for (uint8 i = 0; i < Len; ++i)
 	{
-		Parts.Probability = PartProbability;
+		Pool[i].Probability = PartProbability * i;
 	}
 }
 
 void UHordeLootTable::ContructWeapon(FSelectedWeaponParts& SelectedParts)
 {
-	// Stats
-
-	FVector NewLocation = FVector(0.f, 0.f, 50.f);
-	FActorSpawnParameters SpawnInfo;
-	AHordeWeapon* NewWeapon = GetWorld()->SpawnActor<AHordeWeapon>(AHordeWeapon::StaticClass(), NewLocation, FRotator::ZeroRotator, SpawnInfo);
+	AHordeWeapon* NewWeapon = NewObject<AHordeWeapon>();
 	if (NewWeapon)
 	{
 		if (SelectedParts.SelectedBase.BaseMesh)
@@ -83,5 +82,27 @@ void UHordeLootTable::ContructWeapon(FSelectedWeaponParts& SelectedParts)
 
 		if (SelectedParts.SelectedGripPart.PartMesh)
 			NewWeapon->SetWeaponGripMesh(SelectedParts.SelectedGripPart.PartMesh);
+	}
+
+	float RollX = FMath::FRand();
+	float RollY = FMath::FRand();
+	FVector NewLocation = FVector(1450.f * RollX, 1450.f * RollY, 50.f);
+	FActorSpawnParameters SpawnInfo;
+	AHordeLootWeapon* NewLootWeapon = GetWorld()->SpawnActor<AHordeLootWeapon>(AHordeLootWeapon::StaticClass(), NewLocation, FRotator::ZeroRotator, SpawnInfo);
+	if (NewLootWeapon && NewWeapon)
+	{
+		NewLootWeapon->SetWeaponClass(NewWeapon);
+
+		if (SelectedParts.SelectedBase.BaseMesh)
+			NewLootWeapon->SetWeaponBaseMesh(SelectedParts.SelectedBase.BaseMesh);
+
+		if (SelectedParts.SelectedBarrelPart.PartMesh)
+			NewLootWeapon->SetWeaponBarrelMesh(SelectedParts.SelectedBarrelPart.PartMesh);
+
+		if (SelectedParts.SelectedStockPart.PartMesh)
+			NewLootWeapon->SetWeaponStockMesh(SelectedParts.SelectedStockPart.PartMesh);
+
+		if (SelectedParts.SelectedGripPart.PartMesh)
+			NewLootWeapon->SetWeaponGripMesh(SelectedParts.SelectedGripPart.PartMesh);
 	}
 }

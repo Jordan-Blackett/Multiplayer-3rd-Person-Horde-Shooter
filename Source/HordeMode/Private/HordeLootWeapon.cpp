@@ -2,13 +2,23 @@
 
 #include "HordeLootWeapon.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
 #include "HordeWeapon.h"
 
 AHordeLootWeapon::AHordeLootWeapon()
 {
-	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
-	MeshComp->SetupAttachment(SphereComp);
+	BaseMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BaseMeshComp"));
+	BaseMeshComp->SetupAttachment(SphereComp);
+
+	BarrelMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BarrelMeshComp"));
+	BarrelMeshComp->SetupAttachment(BaseMeshComp, "BarrelSocket");
+
+	StockMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StockMeshComp"));
+	StockMeshComp->SetupAttachment(BaseMeshComp, "StockSocket");
+
+	GripMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GripMeshComp"));
+	GripMeshComp->SetupAttachment(BaseMeshComp, "GripSocket");
 }
 
 void AHordeLootWeapon::AddImpluse(FVector impluse)
@@ -72,7 +82,32 @@ void AHordeLootWeapon::NotifyActorBeginOverlap(AActor * OtherActor)
 	}
 }
 
-TSubclassOf<AHordeWeapon> AHordeLootWeapon::GetWeaponClass()
+AHordeWeapon* AHordeLootWeapon::GetWeaponClass()
 {
 	return WeaponClass;
+}
+
+void AHordeLootWeapon::SetWeaponClass(AHordeWeapon * NewWeaponClass)
+{
+	WeaponClass = NewWeaponClass;
+}
+
+void AHordeLootWeapon::SetWeaponBaseMesh(USkeletalMesh * BaseMesh)
+{
+	BaseMeshComp->SetSkeletalMesh(BaseMesh);
+}
+
+void AHordeLootWeapon::SetWeaponBarrelMesh(UStaticMesh * BarrelMesh)
+{
+	BarrelMeshComp->SetStaticMesh(BarrelMesh);
+}
+
+void AHordeLootWeapon::SetWeaponStockMesh(UStaticMesh * StockMesh)
+{
+	StockMeshComp->SetStaticMesh(StockMesh);
+}
+
+void AHordeLootWeapon::SetWeaponGripMesh(UStaticMesh * GripMesh)
+{
+	GripMeshComp->SetStaticMesh(GripMesh);
 }

@@ -28,6 +28,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UBoxComponent* BoxComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UBoxComponent* LineTraceComp;
+
 	FTimerHandle TraceLineTimerHandle;
 
 	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")

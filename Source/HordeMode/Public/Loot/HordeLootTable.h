@@ -53,8 +53,8 @@ struct FWeaponBaseData : public FLootTableWeaponData
 {
 	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY(EditDefaultsOnly)
-	USkeletalMesh* BaseMesh;
+	//UPROPERTY(EditDefaultsOnly)
+	//USkeletalMesh* BaseMesh;
 };
 
 USTRUCT()
@@ -125,21 +125,26 @@ struct FSelectedWeaponParts {
 	FSelectedWeaponParts() { ; }
 	FSelectedWeaponParts(FWeaponPoolData& Pool)
 	{
-		SelectedBase = SelectLootFromWeaponPartsPool(Pool.WeaponPartsBase);
-		SelectedBarrelPart = SelectLootFromWeaponPartsPool(Pool.WeaponPartsBarrels);
-		SelectedStockPart = SelectLootFromWeaponPartsPool(Pool.WeaponPartsStocks);
-		SelectedGripPart = SelectLootFromWeaponPartsPool(Pool.WeaponPartsGrip);
+		if (Pool.WeaponPartsBase.Num() > 0)
+			SelectedBase = SelectLootFromWeaponPartsPool(Pool.WeaponPartsBase);
+		if (Pool.WeaponPartsBarrels.Num() > 0)
+			SelectedBarrelPart = SelectLootFromWeaponPartsPool(Pool.WeaponPartsBarrels);
+		if (Pool.WeaponPartsStocks.Num() > 0)
+			SelectedStockPart = SelectLootFromWeaponPartsPool(Pool.WeaponPartsStocks);
+		if (Pool.WeaponPartsGrip.Num() > 0)
+			SelectedGripPart = SelectLootFromWeaponPartsPool(Pool.WeaponPartsGrip);
 	}
 
-	template <typename T>
-	T SelectLootFromWeaponPartsPool(TArray<T>& Pool)
+	FWeaponPartData SelectLootFromWeaponPartsPool(TArray<FWeaponPartData>& Pool)
 	{
 		float Roll = FMath::FRand();
-		for (T Part : Pool)
+
+		uint8 Len = Pool.Num();
+		for (uint8 i = 0; i < Len; ++i)
 		{
-			if (Roll <= Part.Probability)
+			if (Roll <= Pool[i].Probability)
 			{
-				return Part;
+				return Pool[i];
 			}
 		}
 
@@ -173,8 +178,7 @@ public:
 private:
 	void SetWeaponPoolProbability(FWeaponPoolData& Pool);
 	
-	template <typename T>
-	void SetWeaponPartsPoolProbality(TArray<T>& Pool);
+	void SetWeaponPartsPoolProbality(TArray<FWeaponPartData>& Pool);
 
 	void ContructWeapon(FSelectedWeaponParts& SelectedParts);
 

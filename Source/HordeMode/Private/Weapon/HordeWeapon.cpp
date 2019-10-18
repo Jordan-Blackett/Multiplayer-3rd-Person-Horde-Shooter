@@ -56,16 +56,6 @@ AHordeWeapon::AHordeWeapon()
 	StockMeshComp->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Block);
 	StockMeshComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
-	GripMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GripMeshComp"));
-	GripMeshComp->SetupAttachment(BaseMeshComp, "GripSocket");
-	GripMeshComp->bReceivesDecals = false;
-	GripMeshComp->CastShadow = true;
-	GripMeshComp->SetCollisionObjectType(ECC_WorldDynamic);
-	GripMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	GripMeshComp->SetCollisionResponseToAllChannels(ECR_Ignore);
-	GripMeshComp->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Block);
-	GripMeshComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
-
 	bLoopedMuzzleFX = false;
 	bLoopedFireAnim = false;
 	bPlayingFireAnim = false;

@@ -7,6 +7,7 @@
 #include "HordeLootWeapon.generated.h"
 
 class AHordeWeapon;
+class USkeletalMesh;
 
 /**
  * 
@@ -24,14 +25,31 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	USkeletalMeshComponent* MeshComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	USkeletalMeshComponent* BaseMeshComp;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Loot")
-	TSubclassOf<AHordeWeapon> WeaponClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStaticMeshComponent* BarrelMeshComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStaticMeshComponent* StockMeshComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStaticMeshComponent* GripMeshComp;
+
+	UPROPERTY()
+	AHordeWeapon* WeaponClass;
 
 public:
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 	
-	TSubclassOf<AHordeWeapon> GetWeaponClass();
+	AHordeWeapon* GetWeaponClass();
+	void SetWeaponClass(AHordeWeapon* NewWeaponClass);
+
+	//////////////////////////////////////////////////////////////////////////
+	//  Weapon Construction - 
+	void SetWeaponBaseMesh(USkeletalMesh* BaseMesh);
+	void SetWeaponBarrelMesh(UStaticMesh* BarrelMesh);
+	void SetWeaponStockMesh(UStaticMesh* StockMesh);
+	void SetWeaponGripMesh(UStaticMesh* GripMesh);
 };

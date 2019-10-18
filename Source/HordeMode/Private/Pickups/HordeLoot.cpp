@@ -25,6 +25,15 @@ AHordeLoot::AHordeLoot()
 	BoxComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	BoxComp->SetupAttachment(SphereComp);
 
+	LineTraceComp = CreateDefaultSubobject<UBoxComponent>(TEXT("LineTraceComp"));
+	LineTraceComp->SetCollisionObjectType(COLLISION_LOOT);
+	LineTraceComp->SetCollisionResponseToAllChannels(ECR_Block);
+	LineTraceComp->SetupAttachment(SphereComp);
+
+	SphereComp->SetHiddenInGame(false);
+	BoxComp->SetHiddenInGame(false);
+	LineTraceComp->SetHiddenInGame(false);
+
 	//MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	//MeshComp->SetupAttachment(SphereComp);
 
