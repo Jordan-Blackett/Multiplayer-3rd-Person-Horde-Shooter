@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "HordeLootTable.generated.h"
 
+//#include "HordeWeaponPartStruct.h"
+
 //UENUM(BlueprintType)
 //enum class EAmmoType : uint8 {
 //	ENone,
@@ -17,6 +19,10 @@
 //};
 
 class UHordeLootTable;
+class AHordeWeapon;
+class USkeletalMesh;
+class UHordeWeaponDataAsset;
+
 
 USTRUCT()
 struct FLootTableData
@@ -38,44 +44,18 @@ public:
 };
 
 USTRUCT()
-struct FLootTableWeaponData : public FLootTableData
-{
-	GENERATED_USTRUCT_BODY()
-
-public:
-	// Weapon Stats
-	float test;
-};
-
-
-USTRUCT()
-struct FWeaponBaseData : public FLootTableWeaponData
-{
-	GENERATED_USTRUCT_BODY()
-
-	//UPROPERTY(EditDefaultsOnly)
-	//USkeletalMesh* BaseMesh;
-};
-
-USTRUCT()
-struct FWeaponPartData : public FLootTableWeaponData
+struct FWeaponPartData : public FLootTableData
 {
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(EditDefaultsOnly)
-	UStaticMesh* PartMesh;
-
-	UPROPERTY(EditDefaultsOnly)
-	USkeletalMesh* BaseMesh;
+	TSubclassOf<UHordeWeaponDataAsset> WeaponPartData;
 };
 
 USTRUCT()
-struct FWeaponPoolData : public FLootTableWeaponData
+struct FWeaponPoolData : public FLootTableData
 {
 	GENERATED_USTRUCT_BODY()
-
-	//UPROPERTY(EditDefaultsOnly)
-	//TArray<FWeaponBaseData> WeaponBase;
 
 	UPROPERTY(EditDefaultsOnly)
 	TArray<FWeaponPartData> WeaponPartsBase;
@@ -116,7 +96,6 @@ struct FSelectedWeaponParts {
 
 	GENERATED_USTRUCT_BODY()
 
-	//FWeaponBaseData SelectedBase;
 	FWeaponPartData SelectedBase;
 	FWeaponPartData SelectedBarrelPart;
 	FWeaponPartData SelectedStockPart;
@@ -170,6 +149,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon Parts")
 	FWeaponPoolData WeaponSMGPool;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon Base")
+	TSubclassOf<AHordeWeapon> AssaultRifleBaseWeapon;
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "LootTable")

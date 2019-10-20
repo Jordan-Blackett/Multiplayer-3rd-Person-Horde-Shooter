@@ -195,4 +195,7 @@ public:
 	/** Get max spread */
 	UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
 	float GetMaxSpread() const;
+
+	virtual void SetWeaponConfig(FWeaponData* Config) override;
+	virtual void SetWeaponDeltaStats(FPartDeltaData* Config) override;
 };

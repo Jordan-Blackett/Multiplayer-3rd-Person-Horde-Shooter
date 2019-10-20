@@ -17,13 +17,25 @@
 #include "Components/AudioComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Player/HordePlayerController.h"
+#include "Loot/HordeWeaponPartDataAsset.h"
 
 // Sets default values
 AHordeWeapon::AHordeWeapon()
 {
-	BaseMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BaseMeshComp"));
-	RootComponent = BaseMeshComp;
+	GripMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("GripMeshComp"));
+	RootComponent = GripMeshComp;
+	GripMeshComp->bReceivesDecals = false;
+	GripMeshComp->CastShadow = true;
+	GripMeshComp->SetCollisionObjectType(ECC_WorldDynamic);
+	GripMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GripMeshComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+	GripMeshComp->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Block);
+	GripMeshComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
+
+
+	BaseMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BaseMeshComp"));
+	BaseMeshComp->SetupAttachment(GripMeshComp, "BaseSocket");
 	//MeshComp->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
 	BaseMeshComp->bReceivesDecals = false;
 	BaseMeshComp->CastShadow = true;
@@ -36,7 +48,7 @@ AHordeWeapon::AHordeWeapon()
 
 	// Weapon Parts
 
-	BarrelMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BarrelMeshComp"));
+	BarrelMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BarrelMeshComp"));
 	BarrelMeshComp->SetupAttachment(BaseMeshComp, "BarrelSocket");
 	BarrelMeshComp->bReceivesDecals = false;
 	BarrelMeshComp->CastShadow = true;
@@ -46,7 +58,7 @@ AHordeWeapon::AHordeWeapon()
 	BarrelMeshComp->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Block);
 	BarrelMeshComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
-	StockMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StockMeshComp"));
+	StockMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("StockMeshComp"));
 	StockMeshComp->SetupAttachment(BaseMeshComp, "StockSocket");
 	StockMeshComp->bReceivesDecals = false;
 	StockMeshComp->CastShadow = true;
@@ -448,7 +460,8 @@ void AHordeWeapon::SimulateWeaponFire()
 		USkeletalMeshComponent* UseWeaponMesh = GetWeaponMesh();
 		if (!bLoopedMuzzleFX || MuzzlePSC == NULL)
 		{
-			MuzzlePSC = UGameplayStatics::SpawnEmitterAttached(MuzzleFX, UseWeaponMesh, MuzzleAttachPoint);
+			MuzzlePSC = UGameplayStatics::SpawnEmitterAttached(MuzzleFX, BarrelMeshComp, MuzzleAttachPoint);
+			//MuzzlePSC = UGameplayStatics::SpawnEmitterAttached(MuzzleFX, UseWeaponMesh, MuzzleAttachPoint);
 		}
 	}
 
@@ -890,19 +903,33 @@ void AHordeWeapon::SetWeaponBaseMesh(USkeletalMesh * BaseMesh)
 	BaseMeshComp->SetSkeletalMesh(BaseMesh);
 }
 
-void AHordeWeapon::SetWeaponBarrelMesh(UStaticMesh * BarrelMesh)
+void AHordeWeapon::SetWeaponBarrelMesh(USkeletalMesh * BarrelMesh)
 {
-	BarrelMeshComp->SetStaticMesh(BarrelMesh);
+	BarrelMeshComp->SetSkeletalMesh(BarrelMesh);
 }
 
-void AHordeWeapon::SetWeaponStockMesh(UStaticMesh * StockMesh)
+void AHordeWeapon::SetWeaponStockMesh(USkeletalMesh * StockMesh)
 {
-	StockMeshComp->SetStaticMesh(StockMesh);
+	StockMeshComp->SetSkeletalMesh(StockMesh);
 }
 
-void AHordeWeapon::SetWeaponGripMesh(UStaticMesh * GripMesh)
+void AHordeWeapon::SetWeaponGripMesh(USkeletalMesh * GripMesh)
 {
-	GripMeshComp->SetStaticMesh(GripMesh);
+	GripMeshComp->SetSkeletalMesh(GripMesh);
+}
+
+FWeaponData * AHordeWeapon::GetWeaponConfig()
+{
+	return &WeaponConfig;
+}
+
+void AHordeWeapon::SetWeaponConfig(FWeaponData * Config)
+{
+	WeaponConfig = *Config;
+}
+
+void AHordeWeapon::SetWeaponDeltaStats(FPartDeltaData * Config)
+{
 }
 
 bool AHordeWeapon::HasInfiniteAmmo() const

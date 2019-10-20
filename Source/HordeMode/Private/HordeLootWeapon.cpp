@@ -8,17 +8,17 @@
 
 AHordeLootWeapon::AHordeLootWeapon()
 {
+	GripMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("GripMeshComp"));
+	GripMeshComp->SetupAttachment(SphereComp);
+	
 	BaseMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BaseMeshComp"));
-	BaseMeshComp->SetupAttachment(SphereComp);
+	BaseMeshComp->SetupAttachment(GripMeshComp, "BaseSocket");
 
-	BarrelMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BarrelMeshComp"));
+	BarrelMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BarrelMeshComp"));
 	BarrelMeshComp->SetupAttachment(BaseMeshComp, "BarrelSocket");
 
-	StockMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StockMeshComp"));
+	StockMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("StockMeshComp"));
 	StockMeshComp->SetupAttachment(BaseMeshComp, "StockSocket");
-
-	GripMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GripMeshComp"));
-	GripMeshComp->SetupAttachment(BaseMeshComp, "GripSocket");
 }
 
 void AHordeLootWeapon::AddImpluse(FVector impluse)
@@ -97,17 +97,17 @@ void AHordeLootWeapon::SetWeaponBaseMesh(USkeletalMesh * BaseMesh)
 	BaseMeshComp->SetSkeletalMesh(BaseMesh);
 }
 
-void AHordeLootWeapon::SetWeaponBarrelMesh(UStaticMesh * BarrelMesh)
+void AHordeLootWeapon::SetWeaponBarrelMesh(USkeletalMesh * BarrelMesh)
 {
-	BarrelMeshComp->SetStaticMesh(BarrelMesh);
+	BarrelMeshComp->SetSkeletalMesh(BarrelMesh);
 }
 
-void AHordeLootWeapon::SetWeaponStockMesh(UStaticMesh * StockMesh)
+void AHordeLootWeapon::SetWeaponStockMesh(USkeletalMesh * StockMesh)
 {
-	StockMeshComp->SetStaticMesh(StockMesh);
+	StockMeshComp->SetSkeletalMesh(StockMesh);
 }
 
-void AHordeLootWeapon::SetWeaponGripMesh(UStaticMesh * GripMesh)
+void AHordeLootWeapon::SetWeaponGripMesh(USkeletalMesh * GripMesh)
 {
-	GripMeshComp->SetStaticMesh(GripMesh);
+	GripMeshComp->SetSkeletalMesh(GripMesh);
 }

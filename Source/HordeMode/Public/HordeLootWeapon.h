@@ -29,13 +29,13 @@ protected:
 	USkeletalMeshComponent* BaseMeshComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UStaticMeshComponent* BarrelMeshComp;
+	USkeletalMeshComponent* BarrelMeshComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UStaticMeshComponent* StockMeshComp;
+	USkeletalMeshComponent* StockMeshComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UStaticMeshComponent* GripMeshComp;
+	USkeletalMeshComponent* GripMeshComp;
 
 	UPROPERTY()
 	AHordeWeapon* WeaponClass;
@@ -49,7 +49,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	//  Weapon Construction - 
 	void SetWeaponBaseMesh(USkeletalMesh* BaseMesh);
-	void SetWeaponBarrelMesh(UStaticMesh* BarrelMesh);
-	void SetWeaponStockMesh(UStaticMesh* StockMesh);
-	void SetWeaponGripMesh(UStaticMesh* GripMesh);
+	void SetWeaponBarrelMesh(USkeletalMesh* BarrelMesh);
+	void SetWeaponStockMesh(USkeletalMesh* StockMesh);
+	void SetWeaponGripMesh(USkeletalMesh* GripMesh);
 };

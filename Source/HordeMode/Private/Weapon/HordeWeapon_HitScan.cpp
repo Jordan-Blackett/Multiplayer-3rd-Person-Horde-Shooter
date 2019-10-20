@@ -7,6 +7,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Effects/HordeImpactEffect.h"
+#include "Loot/HordeWeaponPartDataAsset.h"
 
 void AHordeWeapon_HitScan::FireWeapon()
 {
@@ -271,6 +272,17 @@ float AHordeWeapon_HitScan::GetMinSpread() const
 float AHordeWeapon_HitScan::GetMaxSpread() const
 {
 	return HitScanConfig.FiringSpreadMax;
+}
+
+void AHordeWeapon_HitScan::SetWeaponConfig(FWeaponData* Config)
+{
+	//HitScanConfig = *Config;
+	//WeaponConfig = ;
+}
+
+void AHordeWeapon_HitScan::SetWeaponDeltaStats(FPartDeltaData * Config)
+{
+	HitScanConfig.HitDamage += (HitScanConfig.HitDamage * (Config->Damage / 100));
 }
 
 //////////////////////////////////////////////////////////////////////////

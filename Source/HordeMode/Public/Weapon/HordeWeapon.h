@@ -18,6 +18,7 @@ class UAnimMontage;
 class UUserWidget;
 
 class USkeletalMesh;
+struct FPartDeltaData;
 
 // OnAmmoChanged event - TODO: remove and just call pawn->nNotifyOutOfAmmo
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnAmmoChangedSignature, int32, ammo, int32, maxAmmo, int32, ammoInClip, int32, ammoPerClip);
@@ -120,13 +121,13 @@ protected:
 	USkeletalMeshComponent* BaseMeshComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UStaticMeshComponent* BarrelMeshComp;
+	USkeletalMeshComponent* BarrelMeshComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UStaticMeshComponent* StockMeshComp;
+	USkeletalMeshComponent* StockMeshComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UStaticMeshComponent* GripMeshComp;
+	USkeletalMeshComponent* GripMeshComp;
 
 	/** pawn owner */
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_MyPawn)
@@ -513,9 +514,13 @@ public:
 	//  Weapon Construction - 
 
 	void SetWeaponBaseMesh(USkeletalMesh* BaseMesh);
-	void SetWeaponBarrelMesh(UStaticMesh* BarrelMesh);
-	void SetWeaponStockMesh(UStaticMesh* StockMesh);
-	void SetWeaponGripMesh(UStaticMesh* GripMesh);
+	void SetWeaponBarrelMesh(USkeletalMesh* BarrelMesh);
+	void SetWeaponStockMesh(USkeletalMesh* StockMesh);
+	void SetWeaponGripMesh(USkeletalMesh* GripMesh);
+
+	virtual FWeaponData* GetWeaponConfig();
+	virtual void SetWeaponConfig(FWeaponData* Config);
+	virtual void SetWeaponDeltaStats(FPartDeltaData* Config);
 
 	/** set the weapon's owning pawn */
 	void SetOwningPawn(AHordeCharacter* AHordeCharacter);

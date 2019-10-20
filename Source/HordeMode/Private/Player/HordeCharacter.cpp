@@ -18,6 +18,9 @@
 #include "HordeLoot.h"
 #include "HordeLootWeapon.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "HordeWeapon_HitScan.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/SkeletalMeshComponent.h"
 
 // Sets default values
 AHordeCharacter::AHordeCharacter()
@@ -615,25 +618,25 @@ void AHordeCharacter::EquipInspectedLoot()
 			const int32 CurrentWeaponIdx = Inventory.IndexOfByKey(CurrentWeapon);
 
 			// Spawn new weapon
-			FActorSpawnParameters SpawnInfo;
-			SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			AHordeWeapon* NewWeapon = GetWorld()->SpawnActor<AHordeWeapon>(Cast<AHordeLootWeapon>(InspectedLoot)->GetWeaponClass(), SpawnInfo);
-			NewWeapon->OnEnterInventory(this);
+			AHordeWeapon* NewWeapon = Cast<AHordeLootWeapon>(InspectedLoot)->GetWeaponClass();
+			if (NewWeapon)
+			{	
+				NewWeapon->OnEnterInventory(this);
 
-			// Equip new weapon
-			EquipWeapon(NewWeapon, true);
+				// Equip new weapon
+				EquipWeapon(NewWeapon, true);
 
-			// Drop current weapon
-			//InspectedLoot.setWeapon;
-			MulticastThrowWeaponLoot(InspectedLoot);
+				// Drop current weapon
+				MulticastThrowWeaponLoot(InspectedLoot);
 
-			// Replace current weapon inventory
-			Inventory[CurrentWeaponIdx] = NewWeapon;
+				// Replace current weapon inventory
+				Inventory[CurrentWeaponIdx] = NewWeapon;
+			}
 		}
 
 		// TODO: Vacuum
 
-		//InspectedLoot->Destroy();
+		InspectedLoot->Destroy();
 		InspectedLoot = nullptr;
 	}
 }

@@ -6,6 +6,7 @@
 #include "HordeWeapon_HitScan.h"
 #include "HordeLootWeapon.h"
 #include "Kismet/GameplayStatics.h"
+#include "HordeWeaponPartDataAsset.h"
 
 // Sets default values for this component's properties
 UHordeLootTable::UHordeLootTable()
@@ -68,41 +69,90 @@ void UHordeLootTable::SetWeaponPartsPoolProbality(TArray<FWeaponPartData>& Pool)
 
 void UHordeLootTable::ContructWeapon(FSelectedWeaponParts& SelectedParts)
 {
-	AHordeWeapon* NewWeapon = NewObject<AHordeWeapon>();
-	if (NewWeapon)
+	if (SelectedParts.SelectedBase.WeaponPartData)
 	{
-		if (SelectedParts.SelectedBase.BaseMesh)
-			NewWeapon->SetWeaponBaseMesh(SelectedParts.SelectedBase.BaseMesh);
+		TSubclassOf<AHordeWeapon> NewWeaponBase = SelectedParts.SelectedBase.WeaponPartData->GetDefaultObject<UHordeWeaponPartBaseDataAsset>()->GetWeaponBaseWeapon();
+		if (NewWeaponBase)
+		{
+			FActorSpawnParameters SpawnInfo;
+			SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			
+			// Spawn Weapon
+			AHordeWeapon* NewWeapon = GetWorld()->SpawnActor<AHordeWeapon>(NewWeaponBase, SpawnInfo);
 
-		if (SelectedParts.SelectedBarrelPart.PartMesh)
-			NewWeapon->SetWeaponBarrelMesh(SelectedParts.SelectedBarrelPart.PartMesh);
+			// Spawn LootWeapon
+			float RollX = FMath::FRand();
+			float RollY = FMath::FRand();
+			FVector NewLocation = FVector(1450.f * RollX, 1450.f * RollY, 50.f);
+			AHordeLootWeapon* NewLootWeapon = GetWorld()->SpawnActor<AHordeLootWeapon>(AHordeLootWeapon::StaticClass(), NewLocation, FRotator::ZeroRotator, SpawnInfo);
 
-		if (SelectedParts.SelectedStockPart.PartMesh)
-			NewWeapon->SetWeaponStockMesh(SelectedParts.SelectedStockPart.PartMesh);
+			if (NewWeapon && NewLootWeapon)
+			{
+				// Base
+				USkeletalMesh* BaseMesh = SelectedParts.SelectedBase.WeaponPartData->GetDefaultObject<UHordeWeaponPartBaseDataAsset>()->GetWeaponPartMesh();
+				if (BaseMesh) {
+					NewWeapon->SetWeaponBaseMesh(BaseMesh);
+					NewLootWeapon->SetWeaponBaseMesh(BaseMesh);
+				}
 
-		if (SelectedParts.SelectedGripPart.PartMesh)
-			NewWeapon->SetWeaponGripMesh(SelectedParts.SelectedGripPart.PartMesh);
-	}
+				NewWeapon->GetWeaponConfig();
+				FPartDeltaData WeaponDelta;
 
-	float RollX = FMath::FRand();
-	float RollY = FMath::FRand();
-	FVector NewLocation = FVector(1450.f * RollX, 1450.f * RollY, 50.f);
-	FActorSpawnParameters SpawnInfo;
-	AHordeLootWeapon* NewLootWeapon = GetWorld()->SpawnActor<AHordeLootWeapon>(AHordeLootWeapon::StaticClass(), NewLocation, FRotator::ZeroRotator, SpawnInfo);
-	if (NewLootWeapon && NewWeapon)
-	{
-		NewLootWeapon->SetWeaponClass(NewWeapon);
+				// Barrel
+				if (SelectedParts.SelectedBarrelPart.WeaponPartData) {
+					USkeletalMesh* BarrelMesh = SelectedParts.SelectedBarrelPart.WeaponPartData->GetDefaultObject<UHordeWeaponPartDataAsset>()->GetWeaponPartMesh();
+					if (BarrelMesh) {
+						NewWeapon->SetWeaponBarrelMesh(BarrelMesh);
+						NewLootWeapon->SetWeaponBarrelMesh(BarrelMesh);
+					}
 
-		if (SelectedParts.SelectedBase.BaseMesh)
-			NewLootWeapon->SetWeaponBaseMesh(SelectedParts.SelectedBase.BaseMesh);
+					FPartDeltaData* BarrelStatDelta = SelectedParts.SelectedBarrelPart.WeaponPartData->GetDefaultObject<UHordeWeaponPartDataAsset>()->GetPartDeltaData();
+					if (BarrelStatDelta)
+					{
+						WeaponDelta += *BarrelStatDelta;
+					}
+				}
 
-		if (SelectedParts.SelectedBarrelPart.PartMesh)
-			NewLootWeapon->SetWeaponBarrelMesh(SelectedParts.SelectedBarrelPart.PartMesh);
+				// Stock
+				if (SelectedParts.SelectedStockPart.WeaponPartData) {
+					USkeletalMesh* StockMesh = SelectedParts.SelectedStockPart.WeaponPartData->GetDefaultObject<UHordeWeaponPartDataAsset>()->GetWeaponPartMesh();
+					if (StockMesh) {
+						NewWeapon->SetWeaponStockMesh(StockMesh);
+						NewLootWeapon->SetWeaponStockMesh(StockMesh);
+					}
 
-		if (SelectedParts.SelectedStockPart.PartMesh)
-			NewLootWeapon->SetWeaponStockMesh(SelectedParts.SelectedStockPart.PartMesh);
+					FPartDeltaData* StockStatDelta = SelectedParts.SelectedStockPart.WeaponPartData->GetDefaultObject<UHordeWeaponPartDataAsset>()->GetPartDeltaData();
+					if (StockStatDelta)
+					{
+						WeaponDelta += *StockStatDelta;
+					}
+				}
 
-		if (SelectedParts.SelectedGripPart.PartMesh)
-			NewLootWeapon->SetWeaponGripMesh(SelectedParts.SelectedGripPart.PartMesh);
+				// Grip
+				if (SelectedParts.SelectedGripPart.WeaponPartData) {
+					USkeletalMesh* GripMesh = SelectedParts.SelectedGripPart.WeaponPartData->GetDefaultObject<UHordeWeaponPartDataAsset>()->GetWeaponPartMesh();
+					if (GripMesh) {
+						NewWeapon->SetWeaponGripMesh(GripMesh);
+						NewLootWeapon->SetWeaponGripMesh(GripMesh);
+					}
+
+					FPartDeltaData* GripStatDelta = SelectedParts.SelectedGripPart.WeaponPartData->GetDefaultObject<UHordeWeaponPartDataAsset>()->GetPartDeltaData();
+					if (GripStatDelta)
+					{
+						WeaponDelta += *GripStatDelta;
+					}
+				}
+
+				// Stats
+				NewWeapon->SetWeaponDeltaStats(&WeaponDelta);
+
+				//
+				NewLootWeapon->SetWeaponClass(NewWeapon);
+			}
+			else
+			{
+				// Delete
+			}
+		}
 	}
 }
