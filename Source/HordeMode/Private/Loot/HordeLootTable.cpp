@@ -24,37 +24,50 @@ void UHordeLootTable::BeginPlay()
 	// Generate Probability
 
 	// Assault Rifles
-	SetWeaponPoolProbability(WeaponAssaultRiflePool);	
+	//SetWeaponPoolProbability(WeaponAssaultRiflePool);	
 }
 
-void UHordeLootTable::GenerateLoot()
+void UHordeLootTable::GenerateLoot(FVector LootSpawnPoint, int Level)
 {
-	float Roll = FMath::FRand();
+	//float Roll = FMath::FRand();
 
-	if (Roll <= WeaponAssaultRiflePool.Probability)
-	{
-		if (WeaponAssaultRiflePool.WeaponPartsBase.Num() > 0)
-		{
-			FSelectedWeaponParts SelectedParts(WeaponAssaultRiflePool);
-			ContructWeapon(SelectedParts);
-		}
-		else {
-			// Spawn Default Assault
-		}
-	}
+	//// Weapons
+	//if (Roll <= WeaponAssaultRiflePool.Probability)
+	//{
+	//	if (WeaponAssaultRiflePool.WeaponPartsBase.Num() > 0)
+	//	{
+	//		FSelectedWeaponParts SelectedParts(WeaponAssaultRiflePool);
+	//		ContructWeapon(SelectedParts);
+	//	}
+	//}
 
+	//// Shields
 
-	//SpawnLoot(targetLoction, struct);
+	//// Health
+
+	//// Money
+
+	//SpawnLoot(LootSpawnPoint, struct);
+}
+
+void UHordeLootTable::SetProbability(TArray<FLootTableData> & Pool)
+{
+	//uint8 Len = Pool.Num();
+	//float PartProbability = 1.0f / Len;
+	//for (uint8 i = 0; i < Len; ++i)
+	//{
+	//	Pool[i].Probability = PartProbability * i;
+	//	SetWeaponPoolProbability
+	//}
+
 }
 
 void UHordeLootTable::SetWeaponPoolProbability(FWeaponPoolData & Pool)
 {
-	Pool.Probability = 1;
-
-	SetWeaponPartsPoolProbality(Pool.WeaponPartsBase);
-	SetWeaponPartsPoolProbality(Pool.WeaponPartsBarrels);
-	SetWeaponPartsPoolProbality(Pool.WeaponPartsStocks);
-	SetWeaponPartsPoolProbality(Pool.WeaponPartsGrip);
+	//SetWeaponPartsPoolProbality(Pool.WeaponPartsBase);
+	//SetWeaponPartsPoolProbality(Pool.WeaponPartsBarrels);
+	//SetWeaponPartsPoolProbality(Pool.WeaponPartsStocks);
+	//SetWeaponPartsPoolProbality(Pool.WeaponPartsGrip);
 }
 
 void UHordeLootTable::SetWeaponPartsPoolProbality(TArray<FWeaponPartData>& Pool)
@@ -85,6 +98,9 @@ void UHordeLootTable::ContructWeapon(FSelectedWeaponParts& SelectedParts)
 			float RollY = FMath::FRand();
 			FVector NewLocation = FVector(1450.f * RollX, 1450.f * RollY, 50.f);
 			AHordeLootWeapon* NewLootWeapon = GetWorld()->SpawnActor<AHordeLootWeapon>(AHordeLootWeapon::StaticClass(), NewLocation, FRotator::ZeroRotator, SpawnInfo);
+
+
+			//AHordeWeapon* Projectile = Cast<AHordeWeapon>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, NewWeaponBase, NewLocation));
 
 			if (NewWeapon && NewLootWeapon)
 			{

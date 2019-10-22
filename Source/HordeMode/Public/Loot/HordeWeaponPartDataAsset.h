@@ -49,10 +49,25 @@ struct FPartDeltaData
 	float Damage;
 
 	UPROPERTY(EditDefaultsOnly)
+	float Accuracy;
+
+	UPROPERTY(EditDefaultsOnly)
 	float Handling;
 
 	UPROPERTY(EditDefaultsOnly)
 	float FireRate;
+
+	UPROPERTY(EditDefaultsOnly)
+	float ReloadSpeed;
+
+	UPROPERTY(EditDefaultsOnly)
+	float MagazineSize;
+
+	UPROPERTY(EditDefaultsOnly)
+	float ElementalEffectDamage;
+
+	UPROPERTY(EditDefaultsOnly)
+	float ElementalEffectChance;
 
 	FORCEINLINE struct FPartDeltaData& operator+=(const FPartDeltaData& other)
 	{

@@ -450,18 +450,17 @@ void AHordeWeapon::OnRep_Reload()
 
 void AHordeWeapon::SimulateWeaponFire()
 {
-	if (Role == ROLE_Authority && CurrentState != EWeaponState::Firing)
+	bool burst = ((!WeaponConfig.BurstMode) || (BurstFireCounter >= WeaponConfig.NumOfBurstShots));
+	if (Role == ROLE_Authority && CurrentState != EWeaponState::Firing && burst)
 	{
 		return;
 	}
 
 	if (MuzzleFX)
 	{
-		USkeletalMeshComponent* UseWeaponMesh = GetWeaponMesh();
 		if (!bLoopedMuzzleFX || MuzzlePSC == NULL)
 		{
 			MuzzlePSC = UGameplayStatics::SpawnEmitterAttached(MuzzleFX, BarrelMeshComp, MuzzleAttachPoint);
-			//MuzzlePSC = UGameplayStatics::SpawnEmitterAttached(MuzzleFX, UseWeaponMesh, MuzzleAttachPoint);
 		}
 	}
 
@@ -538,18 +537,44 @@ void AHordeWeapon::HandleFiring()
 
 		if (MyPawn && MyPawn->IsLocallyControlled())
 		{
-			FireWeapon();
-
+			// Shotgun Mode
+			if(WeaponConfig.ShotgunMode)
+			{
+				for (int i = 0; i < WeaponConfig.NumOfShotgunShots; i++)
+				{
+					FireWeapon();
+				}
+			}
+			else
+			{
+				FireWeapon();
+			}
+			
 			UseAmmo();
 
 			// update firing FX on remote clients if function was called on server
 			BurstCounter++;
+
+			// BurstFire
+			if (WeaponConfig.BurstMode)
+			{
+				BurstFireCounter++;
+				if (BurstFireCounter < WeaponConfig.NumOfBurstShots)
+				{
+					GetWorldTimerManager().SetTimer(TimerHandle_HandleFiring, this, &AHordeWeapon::HandleFiring, WeaponConfig.TimeBetweenBurstShots, false);
+				}
+				else {
+					BurstFireCounter = 0;
+				}
+			}
 		}
 	}
 	else if (CanReload())
 	{
 		StartReload();
+		BurstFireCounter = 0;
 	}
+	// Out of ammo
 	else if (MyPawn && MyPawn->IsLocallyControlled())
 	{
 		if (GetCurrentAmmo() == 0 && !bRefiring)
@@ -568,6 +593,8 @@ void AHordeWeapon::HandleFiring()
 		{
 			OnBurstFinished();
 		}
+
+		BurstFireCounter = 0;
 	}
 
 	if (MyPawn && MyPawn->IsLocallyControlled())
@@ -582,13 +609,16 @@ void AHordeWeapon::HandleFiring()
 		if (CurrentAmmoInClip <= 0 && CanReload())
 		{
 			StartReload();
+			BurstFireCounter = 0;
 		}
 
 		// setup refire timer
-		bRefiring = (CurrentState == EWeaponState::Firing && WeaponConfig.TimeBetweenShots > 0.0f);
+		bool burst = ((!WeaponConfig.BurstMode) || (BurstFireCounter >= WeaponConfig.NumOfBurstShots));
+		bRefiring = (CurrentState == EWeaponState::Firing && WeaponConfig.TimeBetweenShots > 0.0f && burst);
 		if (bRefiring)
 		{
 			GetWorldTimerManager().SetTimer(TimerHandle_HandleFiring, this, &AHordeWeapon::HandleFiring, WeaponConfig.TimeBetweenShots, false);
+			BurstFireCounter = 0;
 		}
 	}
 
@@ -718,17 +748,21 @@ void AHordeWeapon::OnBurstStarted()
 
 void AHordeWeapon::OnBurstFinished()
 {
-	// stop firing FX on remote clients
-	BurstCounter = 0;
-
-	// stop firing FX locally, unless it's a dedicated server
-	if (GetNetMode() != NM_DedicatedServer)
+	bool burst = ((!WeaponConfig.BurstMode) || (BurstFireCounter >= WeaponConfig.NumOfBurstShots));
+	if (burst)
 	{
-		StopSimulatingWeaponFire();
-	}
+		// stop firing FX on remote clients
+		BurstCounter = 0;
 
-	GetWorldTimerManager().ClearTimer(TimerHandle_HandleFiring);
-	bRefiring = false;
+		// stop firing FX locally, unless it's a dedicated server
+		if (GetNetMode() != NM_DedicatedServer)
+		{
+			StopSimulatingWeaponFire();
+		}
+
+		GetWorldTimerManager().ClearTimer(TimerHandle_HandleFiring);
+		bRefiring = false;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -800,7 +834,8 @@ FVector AHordeWeapon::GetCameraDamageStartLocation(const FVector & AimDir) const
 
 FVector AHordeWeapon::GetMuzzleLocation() const
 {
-	USkeletalMeshComponent* UseMesh = GetWeaponMesh();
+	//USkeletalMeshComponent* UseMesh = GetWeaponMesh();
+	USkeletalMeshComponent* UseMesh = BarrelMeshComp;
 	return UseMesh->GetSocketLocation(MuzzleAttachPoint);
 }
 
@@ -926,6 +961,11 @@ FWeaponData * AHordeWeapon::GetWeaponConfig()
 void AHordeWeapon::SetWeaponConfig(FWeaponData * Config)
 {
 	WeaponConfig = *Config;
+}
+
+FPartDeltaData AHordeWeapon::GetWeaponStats()
+{
+	return FPartDeltaData();
 }
 
 void AHordeWeapon::SetWeaponDeltaStats(FPartDeltaData * Config)

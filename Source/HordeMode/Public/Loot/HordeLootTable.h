@@ -53,7 +53,7 @@ struct FWeaponPartData : public FLootTableData
 };
 
 USTRUCT()
-struct FWeaponPoolData : public FLootTableData
+struct FWeaponTypePoolData : public FLootTableData
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -74,6 +74,30 @@ struct FWeaponPoolData : public FLootTableData
 
 	UPROPERTY(EditDefaultsOnly)
 	TArray<FWeaponPartData> WeaponPartsAccessories;
+};
+
+USTRUCT()
+struct FWeaponPoolData : public FLootTableData
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	FWeaponTypePoolData WeaponPistolPool;
+
+	UPROPERTY(EditDefaultsOnly)
+	FWeaponTypePoolData WeaponSMGPool;
+
+	UPROPERTY(EditDefaultsOnly)
+	FWeaponTypePoolData WeaponAssaultRiflePool;
+
+	UPROPERTY(EditDefaultsOnly)
+	FWeaponTypePoolData WeaponShotgunPool;
+
+	UPROPERTY(EditDefaultsOnly)
+	FWeaponTypePoolData WeaponSniperPool;
+
+	UPROPERTY(EditDefaultsOnly)
+	FWeaponTypePoolData WeaponLauncherPool;
 };
 
 USTRUCT()
@@ -100,9 +124,11 @@ struct FSelectedWeaponParts {
 	FWeaponPartData SelectedBarrelPart;
 	FWeaponPartData SelectedStockPart;
 	FWeaponPartData SelectedGripPart;
+	FWeaponPartData SelectedSightPart;
+	FWeaponPartData SelectedAccessoryPart;
 
 	FSelectedWeaponParts() { ; }
-	FSelectedWeaponParts(FWeaponPoolData& Pool)
+	FSelectedWeaponParts(FWeaponTypePoolData& Pool)
 	{
 		if (Pool.WeaponPartsBase.Num() > 0)
 			SelectedBase = SelectLootFromWeaponPartsPool(Pool.WeaponPartsBase);
@@ -117,7 +143,6 @@ struct FSelectedWeaponParts {
 	FWeaponPartData SelectLootFromWeaponPartsPool(TArray<FWeaponPartData>& Pool)
 	{
 		float Roll = FMath::FRand();
-
 		uint8 Len = Pool.Num();
 		for (uint8 i = 0; i < Len; ++i)
 		{
@@ -144,19 +169,15 @@ public:
 	TArray<FRarityData> RarityPool;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon Parts")
-	FWeaponPoolData WeaponAssaultRiflePool;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon Parts")
-	FWeaponPoolData WeaponSMGPool;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon Base")
-	TSubclassOf<AHordeWeapon> AssaultRifleBaseWeapon;
+	FWeaponPoolData WeaponsPool;
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "LootTable")
-	void GenerateLoot();
+	void GenerateLoot(FVector LootSpawnPoint, int Level);
 
 private:
+	void SetProbability(TArray<FLootTableData>& Pool);
+
 	void SetWeaponPoolProbability(FWeaponPoolData& Pool);
 	
 	void SetWeaponPartsPoolProbality(TArray<FWeaponPartData>& Pool);

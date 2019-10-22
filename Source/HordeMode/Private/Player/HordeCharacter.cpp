@@ -21,6 +21,7 @@
 #include "HordeWeapon_HitScan.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Loot/HordeWeaponPartDataAsset.h"
 
 // Sets default values
 AHordeCharacter::AHordeCharacter()
@@ -332,7 +333,14 @@ void AHordeCharacter::Tick(float DeltaTime)
 		// [0 - 1]
 		float MovementSpread = GetVelocity().Size() / GetCharacterMovement()->GetMaxSpeed();
 		CurrentWeapon->SetCurrentSpread(MovementSpread);
+
+		// Weapon Stats Card
+		FPartDeltaData WeaponStatCard = CurrentWeapon->GetWeaponStats();
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FString::Printf(TEXT("Damage: %s"), *FString::SanitizeFloat(WeaponStatCard.Damage)));
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FString::Printf(TEXT("Accuracy: %s"), *FString::SanitizeFloat(WeaponStatCard.Accuracy)));
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FString::Printf(TEXT("Damage: %s"), *FString::SanitizeFloat(WeaponStatCard.Damage)));
 	}
+
 }
 
 FVector AHordeCharacter::GetPawnViewLocation() const
@@ -541,9 +549,25 @@ void AHordeCharacter::InspectActor()
 	FHitResult Hit(ForceInit);
 	if (GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, COLLISION_LOOT, TraceParams))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("The Component Being Hit is: %s"), *Hit.GetComponent()->GetName()));
+		//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("The Component Being Hit is: %s"), *Hit.GetComponent()->GetName()));
 
 		InspectedLoot = Cast<AHordeLoot>(Hit.GetActor());
+		if (InspectedLoot)
+		{
+			// Weapon
+			if (Cast<AHordeLootWeapon>(InspectedLoot)->GetWeaponClass() != nullptr)
+			{
+				AHordeWeapon* NewWeapon = Cast<AHordeLootWeapon>(InspectedLoot)->GetWeaponClass();
+				if (NewWeapon)
+				{
+					NewWeapon->GetWeaponStats();
+					FPartDeltaData WeaponStatCard = NewWeapon->GetWeaponStats();
+					GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("Damage: %f"), WeaponStatCard.Damage));
+				}
+			}
+		}
+
+
 		//if (InspectedLoot)
 		//{
 		//	//InspectedLoot->Destroy();

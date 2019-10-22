@@ -53,6 +53,21 @@ struct FWeaponData
 	UPROPERTY(EditDefaultsOnly, Category = Ammo)
 	EAmmoType AmmoType;
 
+	UPROPERTY(EditDefaultsOnly, Category = WeaponMode)
+	bool BurstMode;
+
+	UPROPERTY(EditDefaultsOnly, Category = WeaponMode)
+	int32 NumOfBurstShots;
+
+	UPROPERTY(EditDefaultsOnly, Category = WeaponMode)
+	float TimeBetweenBurstShots;
+
+	UPROPERTY(EditDefaultsOnly, Category = WeaponMode)
+	bool ShotgunMode;
+
+	UPROPERTY(EditDefaultsOnly, Category = WeaponMode)
+	int32 NumOfShotgunShots;
+
 	/** inifite ammo for reloads */
 	UPROPERTY(EditDefaultsOnly, Category = Ammo)
 	bool bInfiniteAmmo;
@@ -77,6 +92,11 @@ struct FWeaponData
 	FWeaponData()
 	{
 		EAmmoType EAmmoType = EAmmoType::ENone;
+		BurstMode = false;
+		NumOfBurstShots = 0;
+		TimeBetweenBurstShots = 0;
+		ShotgunMode = false;
+		NumOfShotgunShots = 0;
 		bInfiniteAmmo = false;
 		bInfiniteClip = false;
 		AmmoPerClip = 20;
@@ -136,6 +156,8 @@ protected:
 	/** weapon data */
 	UPROPERTY(EditDefaultsOnly, Category = Config)
 	FWeaponData WeaponConfig;
+	
+	//FPartDeltaData* WeaponStatCard;
 
 	//////////////////////////////////////////////////////////////////////////
 	// Effects ///////////////////////////////////////////////////////////////
@@ -271,6 +293,8 @@ protected:
 	/** current ammo - inside clip */
 	UPROPERTY(Transient, Replicated)
 	int32 CurrentAmmoInClip;
+
+	int32 BurstFireCounter;
 
 	/** burst counter, used for replicating fire events to remote clients */
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_BurstCounter)
@@ -520,6 +544,7 @@ public:
 
 	virtual FWeaponData* GetWeaponConfig();
 	virtual void SetWeaponConfig(FWeaponData* Config);
+	virtual FPartDeltaData GetWeaponStats(); // = 0;
 	virtual void SetWeaponDeltaStats(FPartDeltaData* Config);
 
 	/** set the weapon's owning pawn */

@@ -197,5 +197,6 @@ public:
 	float GetMaxSpread() const;
 
 	virtual void SetWeaponConfig(FWeaponData* Config) override;
+	virtual FPartDeltaData GetWeaponStats() override;
 	virtual void SetWeaponDeltaStats(FPartDeltaData* Config) override;
 };

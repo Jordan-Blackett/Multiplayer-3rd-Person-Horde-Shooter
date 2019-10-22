@@ -10,5 +10,8 @@ public class HordeModeEditorTarget : TargetRules
 		Type = TargetType.Editor;
 
 		ExtraModuleNames.AddRange( new string[] { "HordeMode" } );
+		
+		// Game editor
+        ExtraModuleNames.AddRange(new string[] { "HordeModeEditor" });
 	}
 }

@@ -1,34 +1,37 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "HordeImpactEffect.h"
-
+#include "Kismet/GameplayStatics.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
+#include "Sound/SoundCue.h"
+//#include "GameFramework/Actor.h"
 
 // Sets default values
 AHordeImpactEffect::AHordeImpactEffect()
 {
-	//bAutoDestroyWhenFinished = true;
+	bAutoDestroyWhenFinished = true;
 }
 
-//void AShooterImpactEffect::PostInitializeComponents()
-//{
-	//Super::PostInitializeComponents();
+void AHordeImpactEffect::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
 
-	//UPhysicalMaterial* HitPhysMat = SurfaceHit.PhysMaterial.Get();
-	//EPhysicalSurface HitSurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitPhysMat);
+	UPhysicalMaterial* HitPhysMat = SurfaceHit.PhysMaterial.Get();
+	EPhysicalSurface HitSurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitPhysMat);
 
-	//// Show particles
-	//UParticleSystem* ImpactFX = GetImpactFX(HitSurfaceType);
-	//if (ImpactFX)
-	//{
-	//	UGameplayStatics::SpawnEmitterAtLocation(this, ImpactFX, GetActorLocation(), GetActorRotation());
-	//}
+	// Show particles
+	UParticleSystem* ImpactFX = GetImpactFX(HitSurfaceType);
+	if (ImpactFX)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(this, ImpactFX, GetActorLocation(), GetActorRotation());
+	}
 
-	//// play sound
-	//USoundCue* ImpactSound = GetImpactSound(HitSurfaceType);
-	//if (ImpactSound)
-	//{
-	//	UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
-	//}
+	// play sound
+	USoundCue* ImpactSound = GetImpactSound(HitSurfaceType);
+	if (ImpactSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+	}
 
 	//if (DefaultDecal.DecalMaterial)
 	//{
@@ -40,32 +43,35 @@ AHordeImpactEffect::AHordeImpactEffect()
 	//		SurfaceHit.ImpactPoint, RandomDecalRotation, EAttachLocation::KeepWorldPosition,
 	//		DefaultDecal.LifeSpan);
 	//}
-//}
+}
 
-//UParticleSystem* AHordeImpactEffect::GetImpactFX(TEnumAsByte<EPhysicalSurface> SurfaceType) const
-//{
-//	UParticleSystem* ImpactFX = NULL;
-//
-//	switch (SurfaceType)
-//	{
-//	//case HORDE_SURFACE_Flesh:		ImpactFX = FleshFX; break;
-//	default:						ImpactFX = DefaultFX; break;
-//	}
-//
-//	return ImpactFX;
-//}
+UParticleSystem* AHordeImpactEffect::GetImpactFX(TEnumAsByte<EPhysicalSurface> SurfaceType) const
+{
+	UParticleSystem* ImpactFX = NULL;
 
-//USoundCue* AHordeImpactEffect::GetImpactSound(TEnumAsByte<EPhysicalSurface> SurfaceType) const
-//{
-//	USoundCue* ImpactSound = NULL;
-//
-//	switch (SurfaceType)
-//	{
-//	//case HORDE_SURFACE_Flesh:		ImpactSound = FleshSound; break;
-//	default:						ImpactSound = DefaultSound; break;
-//	}
-//
-//	return ImpactSound;
-//}
+	//switch (SurfaceType)
+	//{
+	////case HORDE_SURFACE_Flesh:		ImpactFX = FleshFX; break;
+	//default:						ImpactFX = DefaultFX; break;
+	//}
+	ImpactFX = DefaultFX;
+
+	return ImpactFX;
+}
+
+USoundCue* AHordeImpactEffect::GetImpactSound(TEnumAsByte<EPhysicalSurface> SurfaceType) const
+{
+	USoundCue* ImpactSound = NULL;
+
+	//switch (SurfaceType)
+	//{
+	////case HORDE_SURFACE_Flesh:		ImpactSound = FleshSound; break;
+	//default:						ImpactSound = DefaultSound; break;
+	//}
+
+	ImpactSound = DefaultSound;
+
+	return ImpactSound;
+}
 
 

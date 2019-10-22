@@ -11,6 +11,11 @@
 			"AdditionalDependencies": [
 				"Engine"
 			]
-		}
+		},
+		{
+            "Name": "HordeModeEditor",
+            "Type": "Editor",
+            "LoadingPhase":  "PostEngineInit"
+        }
 	]
 }

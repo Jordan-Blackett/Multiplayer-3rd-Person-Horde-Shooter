@@ -280,9 +280,20 @@ void AHordeWeapon_HitScan::SetWeaponConfig(FWeaponData* Config)
 	//WeaponConfig = ;
 }
 
+FPartDeltaData AHordeWeapon_HitScan::GetWeaponStats()
+{
+	FPartDeltaData WeaponStatCard;
+	WeaponStatCard.Damage = HitScanConfig.HitDamage;
+	return WeaponStatCard;
+	//return WeaponStatCard;
+}
+
 void AHordeWeapon_HitScan::SetWeaponDeltaStats(FPartDeltaData * Config)
 {
 	HitScanConfig.HitDamage += (HitScanConfig.HitDamage * (Config->Damage / 100));
+
+	// Set Weapon Stat Card
+	//WeaponStatCard->Damage = HitScanConfig.HitDamage;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -331,12 +342,12 @@ void AHordeWeapon_HitScan::SpawnImpactEffects(const FHitResult& Impact)
 		}
 
 		FTransform const SpawnTransform(Impact.ImpactNormal.Rotation(), Impact.ImpactPoint);
-		//AHordeImpactEffect* EffectActor = GetWorld()->SpawnActorDeferred<AHordeImpactEffect>(ImpactTemplate, SpawnTransform);
-		//if (EffectActor)
-		//{
-		//	EffectActor->SurfaceHit = UseImpact;
-		//	UGameplayStatics::FinishSpawningActor(EffectActor, SpawnTransform);
-		//}
+		AHordeImpactEffect* EffectActor = GetWorld()->SpawnActorDeferred<AHordeImpactEffect>(ImpactTemplate, SpawnTransform);
+		if (EffectActor)
+		{
+			EffectActor->SurfaceHit = UseImpact;
+			UGameplayStatics::FinishSpawningActor(EffectActor, SpawnTransform);
+		}
 	}
 }
 
