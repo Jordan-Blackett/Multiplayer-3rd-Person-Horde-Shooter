@@ -18,7 +18,7 @@ void FHordeModeEditorModule::StartupModule()
 	// Register detail customizations
 	auto& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	PropertyModule.RegisterCustomClassLayout("HordeItemPoolDataAsset", FOnGetDetailCustomizationInstance::CreateStatic(&FHordeLootPoolCustomization::MakeInstance));
-	PropertyModule.RegisterCustomPropertyTypeLayout("ListItemPoolData", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FItemPoolDataCustomization::MakeInstance));
+	//PropertyModule.RegisterCustomPropertyTypeLayout("ListItemPoolData", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FItemPoolDataCustomization::MakeInstance));
 
 	PropertyModule.NotifyCustomizationModuleChanged();
 }
@@ -30,7 +30,7 @@ void FHordeModeEditorModule::ShutdownModule()
 	auto& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 
 	PropertyModule.UnregisterCustomClassLayout("HordeItemPoolDataAsset");
-	PropertyModule.UnregisterCustomClassLayout("ListItemPoolData");
+	//PropertyModule.UnregisterCustomClassLayout("ListItemPoolData");
 }
 
 #undef LOCTEXT_NAMESPACE

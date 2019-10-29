@@ -82,12 +82,12 @@ void AHordeLootWeapon::NotifyActorBeginOverlap(AActor * OtherActor)
 	}
 }
 
-AHordeWeapon* AHordeLootWeapon::GetWeaponClass()
+TSubclassOf<AHordeWeapon> AHordeLootWeapon::GetWeaponClass()
 {
 	return WeaponClass;
 }
 
-void AHordeLootWeapon::SetWeaponClass(AHordeWeapon * NewWeaponClass)
+void AHordeLootWeapon::SetWeaponClass(TSubclassOf<AHordeWeapon> NewWeaponClass)
 {
 	WeaponClass = NewWeaponClass;
 }

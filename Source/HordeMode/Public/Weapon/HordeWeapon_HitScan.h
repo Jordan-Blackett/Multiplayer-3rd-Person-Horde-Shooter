@@ -84,7 +84,7 @@ struct FInstantWeaponData
 		HitDamage = 10;
 		CriticalHitDamageModifier = 2.0f;
 		FumbleHitDamageModifier = 0.75f;
-		DamageType = UDamageType::StaticClass();
+		DamageType = nullptr;// UDamageType::StaticClass();
 		ClientSideHitLeeway = 200.0f;
 		AllowedViewDotHitDir = 0.8f;
 	}

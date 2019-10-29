@@ -163,7 +163,7 @@ void UHordeLootTable::ContructWeapon(FSelectedWeaponParts& SelectedParts)
 				NewWeapon->SetWeaponDeltaStats(&WeaponDelta);
 
 				//
-				NewLootWeapon->SetWeaponClass(NewWeapon);
+				//NewLootWeapon->SetWeaponClass(NewWeapon);
 			}
 			else
 			{

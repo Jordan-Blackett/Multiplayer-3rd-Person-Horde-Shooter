@@ -38,13 +38,16 @@ protected:
 	USkeletalMeshComponent* GripMeshComp;
 
 	UPROPERTY()
-	AHordeWeapon* WeaponClass;
+	TSubclassOf<AHordeWeapon> WeaponClass;
+
+	//UPROPERTY()
+	//TSubclassOf<AHordeWeapon> WeaponDelta;
 
 public:
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 	
-	AHordeWeapon* GetWeaponClass();
-	void SetWeaponClass(AHordeWeapon* NewWeaponClass);
+	TSubclassOf<AHordeWeapon> GetWeaponClass();
+	void SetWeaponClass(TSubclassOf<AHordeWeapon> NewWeaponClass);
 
 	//////////////////////////////////////////////////////////////////////////
 	//  Weapon Construction - 

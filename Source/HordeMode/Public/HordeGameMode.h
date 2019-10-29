@@ -29,13 +29,13 @@ protected:
 
 	int32 WaveCount;
 
-	UPROPERTY(EditDefaultsOnly, Category = "GameMode")
+	UPROPERTY(EditDefaultsOnly, Category = "GameMode_AI")
 	float TimeBetweenWaves;
 
 protected:
 
 	// Hook for BP to spawn a single bot
-	UFUNCTION(BlueprintImplementableEvent, Category = "GameMode")
+	UFUNCTION(BlueprintImplementableEvent, Category = "GameMode_AI")
 	void SpawnNewBot();
 
 	void SpawnBotTimerElapsed();

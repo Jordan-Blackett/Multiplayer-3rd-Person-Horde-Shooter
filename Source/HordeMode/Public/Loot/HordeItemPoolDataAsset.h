@@ -4,9 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+
 #include "HordeItemPoolDataAsset.generated.h"
 
 class UHordeItemPoolDataAsset;
+class UHordeItemPoolWeaponPartDataAsset;
+class UHordeLootTableComponent;
+class UHordeWeaponDataAsset;
 
 UENUM(BlueprintType)
 enum class EWeights : uint8 {
@@ -18,11 +22,41 @@ enum class EWeights : uint8 {
 	ELegendary
 };
 
+FORCEINLINE const float& operator+=(float& currentTickets, const EWeights& weight)
+{
+	float tickets = 0;
+	switch (weight) {
+		case EWeights::ENone: tickets = 0.0f; break;
+		case EWeights::ECommon: tickets = 100.0f; break;
+		case EWeights::EUncommon: tickets = 10.0f; break;
+		case EWeights::ERare: tickets = 1.0f; break;
+		case EWeights::EVeryRare: tickets = 0.1f; break;
+		case EWeights::ELegendary: tickets = 0.01f; break;
+	}
+	return currentTickets += tickets;
+}
+
+FORCEINLINE const float operator*(const EWeights& weight, float WeightModifier)
+{
+	float tickets = 0;
+	switch (weight) {
+	case EWeights::ENone: tickets = 0.0f; break;
+	case EWeights::ECommon: tickets = 100.0f; break;
+	case EWeights::EUncommon: tickets = 10.0f; break;
+	case EWeights::ERare: tickets = 1.0f; break;
+	case EWeights::EVeryRare: tickets = 0.1f; break;
+	case EWeights::ELegendary: tickets = 0.01f; break;
+	}
+	WeightModifier *= tickets;
+	return WeightModifier;
+}
+
 USTRUCT()
 struct FItemPoolData
 {
 	GENERATED_USTRUCT_BODY()
 
+public:
 	UPROPERTY(VisibleAnywhere)
 	float Probability;
 
@@ -30,99 +64,84 @@ struct FItemPoolData
 	EWeights Weight;
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UHordeItemPoolDataAsset> ItemPool;
+	float WeightModifier;
 };
 
 USTRUCT()
-struct FListItemPoolData
+struct FItemPoolPoolData : public FItemPoolData
 {
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(EditDefaultsOnly)
-	TArray<FItemPoolData> ItemPools;
+	TSubclassOf<UHordeItemPoolDataAsset> ItemPool;
+};
+
+USTRUCT()
+struct FItemPoolWeaponTypePoolData : public FItemPoolData
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UHordeWeaponDataAsset> WeaponPart;
 };
 
 /**
  * 
  */
-UCLASS(Blueprintable)
+UCLASS()
 class HORDEMODE_API UHordeItemPoolDataAsset : public UDataAsset
 {
 	GENERATED_BODY()
 
 public:
+	virtual int SelectLoot(UHordeLootTableComponent* LootTable) { return 1; };
 
-	//UPROPERTY(VisibleAnywhere, Category = "Test")
-	//float Probability;
-
-	//UPROPERTY(EditDefaultsOnly)
-	//float Weight;
-
-	UPROPERTY(EditAnywhere, Category = "Pools")
-	FListItemPoolData Pools;
-
-	//UPROPERTY(EditDefaultsOnly)
-	//UHordeItemPoolDataAsset* ItemPool;
-
-	//UPROPERTY(EditDefaultsOnly)
-	//TSubclassOf<UHordeItemPoolDataAsset> tertr;
-
-	void PostEditChangeProperty(struct FPropertyChangedEvent& e)
-	{
-		Super::PostEditChangeProperty(e);
-
-		FName PropertyName = (e.Property != NULL) ? e.Property->GetFName() : NAME_None;
-		if (PropertyName == GET_MEMBER_NAME_CHECKED(UHordeItemPoolDataAsset, Pools)) {
-			/* Because you are inside the class, you should see the value already changed */
-
-			//TransmissionSetup.ItemPools[0].Probability = 10.f;
-			//Probability = Weight;
-
-			//if (MyBool) doThings(); // This is how you access MyBool.
-			//else undoThings();
-
-			///* if you want to use bool property */
-			//UBoolProperty* prop = static_cast<UBoolProperty*>(e.Property);
-			//if (prop->GetPropertyValue())
-			//	dothings()
-			//else
-			//	undothings()
-		}
-	}
-
-	void PostEditChangeChainProperty(struct FPropertyChangedChainEvent& PropertyChangedEvent)
-	{
-		Super::PostEditChangeChainProperty(PropertyChangedEvent);
-
-		//FName PropertyName = (PropertyChangedEvent.Property != NULL) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
-		//if (PropertyName == GET_MEMBER_NAME_CHECKED(UHordeItemPoolDataAsset, TransmissionSetup)) {
-		//
-		uint32 arrayNum = Pools.ItemPools.Num();
-		for (uint32 Idx = 0; Idx < arrayNum; ++Idx)
-		{
-			//GetArrayIndex()
-			Pools.ItemPools[Idx].Probability = 15.f;
-		}
-	}
 };
 
 UCLASS(Blueprintable)
-class HORDEMODE_API UHordeListDefinitionDataAsset : public UDataAsset
+class HORDEMODE_API UHordeItemPoolsDataAsset : public UHordeItemPoolDataAsset
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, Category = "Pools")
-	FListItemPoolData TransmissionSetup;
+public:
+	UPROPERTY(EditDefaultsOnly, Category = "ItemPools")
+	TArray<FItemPoolPoolData> ItemPools;
+
+	virtual int SelectLoot(UHordeLootTableComponent* LootTable) override; //AHordeLoot
+
+private:
+
+	void PostEditChangeChainProperty(struct FPropertyChangedChainEvent& PropertyChangedEvent);
+
+
 };
 
+UCLASS(Blueprintable)
+class HORDEMODE_API UHordeItemPoolWeaponPartDataAsset : public UHordeItemPoolDataAsset
+{
+	GENERATED_BODY()
 
-//UCLASS(Blueprintable)
-//class HORDEMODE_API UHordeWeaponPoolDataAsset : public UHordeItemPoolDataAsset
-//{
-//	GENERATED_BODY()
-//
-//	UPROPERTY(EditDefaultsOnly, Category = "Pools")
-//	int Pools;
-//
-//};
+public:
+	UPROPERTY(EditDefaultsOnly, Category = "ItemPools")
+	TArray<FItemPoolWeaponTypePoolData> ItemPools;
 
+	TSubclassOf<UHordeWeaponDataAsset>* SelectLootParts(UHordeLootTableComponent* LootTable);
+
+private:
+
+	void PostEditChangeChainProperty(struct FPropertyChangedChainEvent& PropertyChangedEvent);
+
+};
+
+UCLASS(Blueprintable)
+class HORDEMODE_API UHordeItemPoolWeaponDataAsset : public UHordeItemPoolsDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	virtual int SelectLoot(UHordeLootTableComponent* LootTable) override;
+
+private:
+	int ConstructWeapon(UHordeLootTableComponent* LootTable, TArray<TSubclassOf<UHordeWeaponDataAsset>*> Parts);
+
+};

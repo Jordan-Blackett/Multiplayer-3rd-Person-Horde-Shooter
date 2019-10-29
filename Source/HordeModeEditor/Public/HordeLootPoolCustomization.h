@@ -15,8 +15,14 @@ public:
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
 	// End of IDetailCustomization interface
 
-	void OnBuildChild(TSharedRef<IPropertyHandle> ChildHandle, int32 ElementIndex, IDetailChildrenBuilder& ChildrenBuilder);
-	void BuildColumnsHeaderHelper(TSharedRef<class IPropertyHandle> StructPropertyHandle, FDetailWidgetRow& LootPoolSetup);
-
 	static TSharedRef<IDetailCustomization> MakeInstance();
+
+private:
+	void OnBuildChild(TSharedRef<IPropertyHandle> ChildHandle, int32 ElementIndex, IDetailChildrenBuilder& ChildrenBuilder);
+	void RemoveItemPool(TSharedRef<IPropertyHandle> PoolHandle);
+
+	void RefreshDelegate();
+
+	IDetailLayoutBuilder* Builder;
+
 };

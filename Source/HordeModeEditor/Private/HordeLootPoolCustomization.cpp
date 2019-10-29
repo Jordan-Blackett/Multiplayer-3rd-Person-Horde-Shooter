@@ -1,5 +1,5 @@
 #include "HordeLootPoolCustomization.h"
-#include "Loot/HordeItemPoolDataAsset.h" // The class we're customizing
+#include "Loot/HordeItemPoolDataAsset.h"
 #include "PropertyEditing.h"
 
 #include "DetailCustomizations.h"
@@ -15,9 +15,6 @@
 #include "ComboBox.h"
 #include "PropertyCustomizationHelpers.h"
 
-#define RowWidth_Customization 50
-#define GearColumnsWidth (75.f * 3.f)
-
 #define LOCTEXT_NAMESPACE "HordeModeEditorModule"
 
 TSharedRef<IDetailCustomization> FHordeLootPoolCustomization::MakeInstance()
@@ -27,122 +24,20 @@ TSharedRef<IDetailCustomization> FHordeLootPoolCustomization::MakeInstance()
 
 void FHordeLootPoolCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {
-	// This is where the core of the customization code will go.
-	//TSharedRef<IPropertyHandle> Property = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UHordeItemPoolDataAsset, Probability));
+	Builder = &DetailBuilder;
 
-	IDetailCategoryBuilder& Catagory = DetailBuilder.EditCategory(TEXT("Test"), FText::GetEmpty(), ECategoryPriority::Important);
-	TSharedRef<IPropertyHandle> Property = DetailBuilder.GetProperty("Probability");
+	//TSharedRef<IPropertyHandle> PropertyArray = DetailBuilder.GetProperty("ItemPool");
+	//check(PropertyArray->IsValidHandle());
 
-	//TSharedRef<IPropertyHandle> MaterialProperty = DetailCategory.GetProperty("Materials");
+	//TSharedRef<FDetailArrayBuilder> ArrayChildBuilder = MakeShareable(new FDetailArrayBuilder(PropertyArray)); //.ToSharedRef()
+	//ArrayChildBuilder->OnGenerateArrayElementWidget(FOnGenerateArrayElementWidget::CreateSP(this, &FHordeLootPoolCustomization::OnBuildChild));
 
-	
-	UHordeItemPoolDataAsset* Details = nullptr;
-	TArray<TWeakObjectPtr<UObject>> CustomizedObjects;
-	DetailBuilder.GetObjectsBeingCustomized(CustomizedObjects);
-	for (TWeakObjectPtr<UObject> Object : CustomizedObjects)
-	{
-		if (Object.IsValid())
-		{
-			//UHordeItemPoolDataAsset
-		}
-	}
+	//IDetailCategoryBuilder& AttributesCategory = DetailBuilder.EditCategory("ItemPools", FText::GetEmpty(), ECategoryPriority::Important);
+	//check(AttributesCategory.IsParentLayoutValid());
+	//AttributesCategory.AddCustomBuilder(ArrayChildBuilder);
 
-	Catagory.AddCustomRow(LOCTEXT("RowSearchName", "test"))
-		.NameContent()
-		[
-			SNew(STextBlock)
-			.Text(LOCTEXT("DetailName", "Button --->"))
-			//.Font(IDetailLayoutBuilder::GetDetailFont())
-		]
-	.ValueContent()
-		[
-			SNew(SButton)
-			.Text(LOCTEXT("ButtonText", "Button"))
-			.HAlign(HAlign_Center)
-			.ToolTipText(LOCTEXT("ButtonToolTip", "TIP"))
-		];
-	
-	
-
-
-		Catagory.AddCustomRow(LOCTEXT("RowSearchName", "test2"))
-			[
-				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-				[
-					// Make a new SProperty
-					SNew(SProperty, Property)
-				]
-				+ SHorizontalBox::Slot()
-				.Padding(4.0f, 0.0f)
-				.MaxWidth(50)
-				[
-					SNew(SProperty, Property)
-					//.DisplayName.IsEnabled(false)// Hide the name
-				]
-			];
-
-
-		//FDetailArrayBuilder test(Property2);
-		//test.OnGenerateArrayElementWidget(&FHordeLootPoolCustomization::OnGenerateElementForMaterials);
-		//Catagory.AddCustomRow(LOCTEXT("RowSearchName", "test2"))
-		//	.NameContent()
-		//	[
-		//		SNew(STextBlock)
-		//		.Text(LOCTEXT("DetailName", "Button --->"))
-		//	//.Font(IDetailLayoutBuilder::GetDetailFont())
-		//	]
-		//	.ValueContent()
-		//	[
-		//		SNew(test, MaterialProperty)
-
-		// Populate combo boxes with material property list
-		//FMaterialAttributeDefinitionMap::GetDisplayNameToIDList(AttributeNameToIDList);
-
-		//AttributeDisplayNameList.Empty(AttributeNameToIDList.Num());
-		//for (const TPair<FString, FGuid>& NameGUIDPair : AttributeNameToIDList)
-		//{
-		//	AttributeDisplayNameList.Add(MakeShareable(new FString(NameGUIDPair.Key)));
-		//}
-
-
-		//TSharedRef<IPropertyHandle> StructPropertyHandle = DetailBuilder.GetProperty("Pools");
-		//
-		//// copy all transmision instances I'm accessing right now
-		//TArray<void*> StructPtrs;
-		////StructPropertyHandle->AccessRawData(StructPtrs);
-
-
-
-
-		//BuildColumnsHeaderHelper(StructPropertyHandle, StructBuilder.AddCustomRow(GearsSetupGroupLabel));
-
-		//for (uint32 ChildIdx = 0; ChildIdx < NumChildren; ++ChildIdx)
-		//{
-
-
-		//	TSharedRef<IPropertyHandle> ChildProperty = StructPropertyHandle->GetChildHandle(ChildIdx).ToSharedRef();
-		//	const FString PropertyName = ChildProperty->GetProperty() ? ChildProperty->GetProperty()->GetName() : TEXT("");
-
-
-
-
-
-		//IDetailCategoryBuilder& Catagory2 = DetailBuilder.EditCategory(TEXT("Pools"), FText::GetEmpty(), ECategoryPriority::Important);
-		//TSharedRef<IPropertyHandle> PropertyArray = DetailBuilder.GetProperty("Pools");
-
-		//TSharedPtr<IPropertyHandle> PropertyGetArray = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UHordeItemPoolDataAsset, Pools));
-
-		//check(PropertyArray->IsValidHandle());
-
-		//// Add builder for children to handle array changes
-		//TSharedRef<FDetailArrayBuilder> ArrayChildBuilder = MakeShareable(new FDetailArrayBuilder(PropertyArray)); //.ToSharedRef()
-		//ArrayChildBuilder->OnGenerateArrayElementWidget(FOnGenerateArrayElementWidget::CreateSP(this, &FHordeLootPoolCustomization::OnBuildChild));
-
-		//IDetailCategoryBuilder& AttributesCategory = DetailBuilder.EditCategory("Pools", FText::GetEmpty(), ECategoryPriority::Important);
-		//AttributesCategory.AddCustomBuilder(ArrayChildBuilder);
-
-		////TSharedPtr<IPropertyHandle> Weight = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(FItemPoolData, Weight));
+	//PropertyArray->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FHordeLootPoolCustomization::RefreshDelegate));
+	//PropertyArray->SetOnChildPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FHordeLootPoolCustomization::RefreshDelegate));
 }
 
 void FHordeLootPoolCustomization::OnBuildChild(TSharedRef<IPropertyHandle> ChildHandle, int32 ElementIndex, IDetailChildrenBuilder& ChildrenBuilder)
@@ -153,151 +48,206 @@ void FHordeLootPoolCustomization::OnBuildChild(TSharedRef<IPropertyHandle> Child
 	//Cast<FItemPoolData>(ChildHandle.Get().GetPropertyClass())->Weight;
 	//ChildrenBuilder.
 	//TSharedPtr<IPropertyHandle> Weight = ChildrenBuilder.get
-	//TSharedPtr<IPropertyHandle> PropertyGetArray = &ChildHandle.Get().GetProperty(GET_MEMBER_NAME_CHECKED(UHordeItemPoolDataAsset, Pools));
+	TSharedPtr<IPropertyHandle> PropertyGetArray = ChildHandle->GetChildHandle("Ratio");
 
-
+	//PropertyGetArray.Get()->GetValueAsFormattedText();
 	//TSharedRef<SWidget> RatioWidget = (NumChildren > 1 ? GearHandle->GetChildHandle("Ratio")->CreatePropertyValueWidget() : GearHandle->CreatePropertyValueWidget());
 	//TSharedRef<SWidget> DownRatioWidget = (NumChildren > 1 ? GearHandle->GetChildHandle("DownRatio")->CreatePropertyValueWidget() : GearHandle->CreatePropertyValueWidget());
 	//TSharedRef<SWidget> UpRatioWidget = (NumChildren > 1 ? GearHandle->GetChildHandle("UpRatio")->CreatePropertyValueWidget() : GearHandle->CreatePropertyValueWidget());
 
-
+	//PropertyArrayRow.GetDefaultWidgets();
+	//PropertyArrayRow.
 	//FItemPoolData
-	PropertyArrayRow.CustomWidget()
+	//ChildHandle->GetChildHandle("UpRatio")->GetPropertyDisplayName()
+	//TEXT(ChildHandle->GetChildHandle("UpRatio")->GetPropertyDisplayName()
+
+	FFormatNamedArguments Arguments;
+
+	FText ItemPoolValueText;
+	//FString NameValue;
+	//NameValue = ChildHandle->GetChildHandle("ItemPool")->GetValueAsDisplayText()//->GetPropertyClass()//GetProperty()->GetClass()->ClassGeneratedBy->GetName();  //ChildHandle->GetChildHandle("ItemPool")->GetProperty()->GetOuter()->GetName();
+	ChildHandle->GetChildHandle("ItemPool")->GetValueAsFormattedText(ItemPoolValueText);
+
+	//FString unwantedBit = TEXT("ItemPool=BlueprintGeneratedClass'" / Game / Blueprints / LootTables / DA_LootPool_GunsAndGear_All.DA_LootPool_GunsAndGear_All_C"') ");
+//	resolutionString->RemoveFromStart(unwantedBit);
+	FString t;
+	//ChildHandle->GetChildHandle("ItemPool")->GetValueAsDisplayString(t);
+	//int32 err = t.Find("DA_");
+	//int32 err2 = t.Find(".DA_");
+	//int32 c = t.Len() - err2;
+	//t.RemoveAt(0, err);
+	//t.RemoveAt(err2, c);
+	//t = ChildHandle->GetChildHandle("ItemPool");
+	//TSharedPtr<IPropertyHandle> PropertyGetArray2 = ChildHandle->GetChildHandle("ItemPool"); FText::FromString(NameValue)
+
+	//UProperty* const Property = ChildHandle->GetChildHandle("ItemPool")->GetPropertyClass();
+	//Property->GetPathName();
+	ChildHandle->GetChildHandle("ItemPool")->GetValueAsFormattedString(t);
+	FText ItemPoolLabel = FText::Format(LOCTEXT("ItemPoolLabel", "Pool: {0}"), FText::FromString(t));
+	//FText ItemPoolLabel = FText::Format(LOCTEXT("ItemPoolLabel", "Pool: {0}"), FText::FromString(ClassName));
+
+	////auto FillClassFilters = [&](TArray<const UClass*> &ClassFilters, FName TagName, FText out)
+	////{
+	//	//TArray<const UClass*> &ClassFilters;
+	//	FName TagName;
+	//	const FString* ClassesFilterString = &Property->GetMetaData(TagName);
+	//	
+	//	//ClassFilters.Empty();
+
+	//	if (!ClassesFilterString->IsEmpty())
+	//	{
+	//		TArray<FString> ClassFilterNames;
+	//		ClassesFilterString->ParseIntoArray(ClassFilterNames, TEXT(","), true);
+
+	//		for (FString& ClassName : ClassFilterNames)
+	//		{
+	//			ItemPoolLabel = FText::Format(LOCTEXT("ItemPoolLabel", "Pool: {0}"), FText::FromString(ClassName));
+	//		}
+	//	}
+	////};
+
+	//const FString* ClassesFilterString = &ChildHandle->GetChildHandle("ItemPool")->GetProperty()->GetMetaData(TagName);
+
+	//TArray<FString> ClassFilterNames;
+	//ClassesFilterString->ParseIntoArray(ClassFilterNames, TEXT(","), true);
+
+	//ClassName.TrimStartAndEndInline();
+	//UClass* Class = FindObject<UClass>(ANY_PACKAGE, *ClassName);
+
+	//void* ItemPoolValueAsVoidPtr;
+	//ChildHandle->GetChildHandle("ItemPool")->GetValueData(ItemPoolValueAsVoidPtr);
+	//UClass *ItemPoolValue = (UClass*)&ItemPoolValueAsVoidPtr;
+	//ItemPoolValue->GetName();
+	//FText Label44 = FText::Format(LOCTEXT("ItemPoolLabel", "Pool: {0}"), FText::FromString(ItemPoolValue->GetName()));
+	//UClass*
+	//BlueprintGeneratedClass'/Game/Blueprints/LootTables/DA_LootPool_GunsAndGear_All.DA_LootPool_GunsAndGear_All_C'
+
+	//FSimpleDelegate te;
+	//te.CreateSP(this, &FHordeLootPoolCustomization::OnBuildChild);
+	//te.BindSP(this, &FHordeLootPoolCustomization::CreateItemPoolUIDelegate);
+
+	//TSharedRef<FDetailArrayBuilder> ArrayChildBuilder = MakeShareable(new FDetailArrayBuilder(PropertyArray)); //.ToSharedRef()
+	//ArrayChildBuilder->OnGenerateArrayElementWidget(FOnGenerateArrayElementWidget::CreateSP(this, &FHordeLootPoolCustomization::OnBuildChild));
+
+	//ChildHandle->GetChildHandle("ItemPool")->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FHordeLootPoolCustomization::CreateItemPoolUIDelegate, DetailBuilder));
+
+	// Weight Label
+	FText WeightValueText;
+	FText WeightModifierValueText;
+	ChildHandle->GetChildHandle("Weight")->GetValueAsDisplayText(WeightValueText);
+	ChildHandle->GetChildHandle("WeightModifier")->GetValueAsDisplayText(WeightModifierValueText);
+	FText WeightLabel;
+	void* WeightValueAsVoidPtr;
+	ChildHandle->GetChildHandle("WeightModifier")->GetValueData(WeightValueAsVoidPtr);
+	float WeightValue = *(float *)&WeightValueAsVoidPtr;
+	if (WeightValue > 0.0f) {
+		WeightLabel = FText::Format(LOCTEXT("WeightLabel", "{0} * {1}"), WeightValueText, WeightModifierValueText);
+	} else {
+		WeightLabel = FText::Format(LOCTEXT("WeightLabel", "{0}"), WeightValueText);
+	}
+
+	// Probability Label
+	FText ProbabilityValueText;
+	ChildHandle->GetChildHandle("Probability")->GetValueAsDisplayText(ProbabilityValueText);
+	void* ProbabilityValueAsVoidPtr;
+	ChildHandle->GetChildHandle("Probability")->GetValueData(ProbabilityValueAsVoidPtr);
+	float ProbabilityValue = *(float *)&ProbabilityValueAsVoidPtr;
+	float **Jim = (float**)&ProbabilityValueAsVoidPtr;
+
+	FNumberFormattingOptions format;
+	format.SetMinimumFractionalDigits(5);
+	format.SetMaximumFractionalDigits(5);
+	FText ProbabilityLabel = FText::Format(LOCTEXT("ProbabilityLabel", "{value}"), FText::AsPercent(**Jim, &format));
+
+	FText Label = FText::Format(LOCTEXT("ItemPoolLabel", "ItemPool {0}"), FText::AsNumber(ElementIndex));
+
+	TSharedRef<SWidget> RemoveWidget = PropertyCustomizationHelpers::MakeDeleteButton(FSimpleDelegate::CreateSP(this, &FHordeLootPoolCustomization::RemoveItemPool, ChildHandle), LOCTEXT("RemoveGearToolTip", "Removes gear"));
+
+	FResetToDefaultOverride ResetToDefault;
+	PropertyArrayRow = PropertyArrayRow.OverrideResetToDefault(ResetToDefault.Hide(true));
+	PropertyArrayRow.ShowPropertyButtons(false);
+	PropertyArrayRow.CustomWidget(true)
 	.NameContent()
 	[
-		ChildHandle->CreatePropertyNameWidget()
+		//ChildHandle->CreatePropertyNameWidget()
+		SNew(STextBlock)
+		.Text(Label)
 	]
 	.ValueContent()
 	[
 		SNew(SHorizontalBox)
 		+ SHorizontalBox::Slot()
-		[
-			SNew(SComboBox<TSharedPtr<FString>>)
-			//.OptionsSource(&AttributeDisplayNameList)
-			//.OnGenerateWidget_Lambda([](TSharedPtr<FString> InItem)
-			//{
-			//	return SNew(STextBlock)
-			//	//.Font(IDetailLayoutBuilder::GetDetailFont())
-			//	.Text(FText::FromString(*InItem));
-			//})
-			//.OnSelectionChanged_Lambda([=](TSharedPtr<FString> Selection, ESelectInfo::Type)
-			//{
-			//	if (ChildHandle->IsValidHandle())
-			//	{
-			//		//// Convert display name to attribute ID
-			//		//for (const auto& NameIDPair : AttributeNameToIDList)
-			//		//{
-			//		//	if (NameIDPair.Key == *Selection)
-			//		//	{
-			//		//		ChildHandle->SetValueFromFormattedString(NameIDPair.Value.ToString(EGuidFormats::Digits));
-			//		//		break;
-			//		//	}
-			//		//}
-			//	}
-			//})
-			//.ContentPadding(FMargin(2, 0))
-			//[
-			//	SNew(STextBlock)
-			//	//.Font(IDetailLayoutBuilder::GetDetailFont())
-			//	.Text_Lambda([=]() -> FText
-			//	{
-			//		if (ChildHandle->IsValidHandle())
-			//		{
-			//			// Convert attribute ID string to display name
-			//			FString IDString; FGuid IDValue;
-			//			ChildHandle->GetValueAsFormattedString(IDString);
-			//			FGuid::ParseExact(IDString, EGuidFormats::Digits, IDValue);
-
-			//			FString AttributeName = "Test"; //FMaterialAttributeDefinitionMap::GetDisplayName(IDValue);
-			//			return FText::FromString(AttributeName);
-			//		}
-
-			//		return FText::GetEmpty();
-			//	})
-			//]
-		]
-		+ SHorizontalBox::Slot()
-		.Padding(100.0f, 0.0f)
-		.MaxWidth(50)
-		[
-			SNew(SProperty, ChildHandle)
-			.DisplayName(FText::FromString("Weight:"))
-		]
-		+ SHorizontalBox::Slot()
-		.Padding(200.0f, 0.0f)
-		[
-			SNew(SProperty, ChildHandle)
-			.DisplayName(FText::FromString("Weight:"))
-		]
-	];
-}
-
-void FHordeLootPoolCustomization::BuildColumnsHeaderHelper(TSharedRef<class IPropertyHandle> StructPropertyHandle, FDetailWidgetRow& LootPoolSetup)
-{
-
-	LootPoolSetup
-		.NameContent()
-		[
-			SNew(STextBlock)
-			.Text(LOCTEXT("ListDefinition", "List Definition"))
-			//.Font(IDetailLayoutBuilder::GetDetailFontBold())
-		]
-		.ValueContent()
-		.MaxDesiredWidth(GearColumnsWidth)
-		.MinDesiredWidth(GearColumnsWidth)
-		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			.FillWidth(0.3333f)
-			.VAlign(VAlign_Center)
-			[
-				SNew(SBox)
-				.WidthOverride(RowWidth_Customization)
-				.HAlign(HAlign_Left)
-				.Content()
-				[
-					SNew(STextBlock)
-					.Text(LOCTEXT("PoolTableLabel", "Pool Table"))
-					//.Font(IDetailLayoutBuilder::GetDetailFontBold())
-				]
-			]
-		+ SHorizontalBox::Slot()
-		.FillWidth(0.3333f)
+		.AutoWidth()
+		.Padding(0.0f, 0.0f, 10.0f, 0.f)
 		.VAlign(VAlign_Center)
 		[
 			SNew(SBox)
 			.HAlign(HAlign_Left)
-			.WidthOverride(RowWidth_Customization)
 			.Content()
 			[
 				SNew(STextBlock)
-				.Text(LOCTEXT("WeightLabel", "Weight"))
+				.Text(ItemPoolLabel)
+				.ColorAndOpacity(FLinearColor(1.f, 0.f, 0.f, 0.9f))
 				//.Font(IDetailLayoutBuilder::GetDetailFontBold())
 			]
 		]
 		+ SHorizontalBox::Slot()
-		.FillWidth(0.3333f)
+		.AutoWidth()
+		.Padding(0.0f, 0.0f, 10.0f, 0.f)
 		.VAlign(VAlign_Center)
 		[
-			SNew(STextBlock)
-			.Text(LOCTEXT("HighRPMLabel", "Up Ratio"))
-			//.Font(IDetailLayoutBuilder::GetDetailFontBold())
+			SNew(SBox)
+			//.Padding()
+			.HAlign(HAlign_Left)
+			.Content()
+			[
+				SNew(STextBlock)
+				.Text(WeightLabel)
+				.ColorAndOpacity(FLinearColor(0.f, 0.f, 1.f, 0.9f))
+				//.Font(IDetailLayoutBuilder::GetDetailFontBold())
+			]
 		]
-		//+ SHorizontalBox::Slot()
-		//.AutoWidth()
-		//.VAlign(VAlign_Center)
-		//[
-		//	PropertyCustomizationHelpers::MakeAddButton(FSimpleDelegate::CreateSP(this, &FVehicleTransmissionDataCustomization::AddGear, StructPropertyHandle), LOCTEXT("AddGearToolTip", "Adds a new gear"))
-		//]
-		//+ SHorizontalBox::Slot()
-		//.AutoWidth()
-		//.VAlign(VAlign_Center)
-		//[
-		//	PropertyCustomizationHelpers::MakeEmptyButton(FSimpleDelegate::CreateSP(this, &FVehicleTransmissionDataCustomization::EmptyGears, StructPropertyHandle), LOCTEXT("EmptyGearToolTip", "Removes all gears"))
-		//]
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.Padding(0.0f, 0.0f, 10.0f, 0.f)
+		.VAlign(VAlign_Center)
+		[
+			SNew(SBox)
+			.HAlign(HAlign_Left)
+			.Content()
+			[
+				SNew(STextBlock)
+				.Text(ProbabilityLabel)
+				.ColorAndOpacity(FLinearColor(0.f, 1.f, 0.f, 0.9f))
+				//.Font(IDetailLayoutBuilder::GetDetailFontBold())
+			]
+		]
+		+ SHorizontalBox::Slot()
+		.Padding(4.f)
+		.AutoWidth()
+		[
+			RemoveWidget
+		]
 	];
 }
 
+void FHordeLootPoolCustomization::RemoveItemPool(TSharedRef<IPropertyHandle> PoolHandle)
+{
+	if (PoolHandle->IsValidHandle())
+	{
+		const TSharedPtr<IPropertyHandle> ParentHandle = PoolHandle->GetParentHandle();
+		const TSharedPtr<IPropertyHandleArray> ParentArrayHandle = ParentHandle->AsArray();
+
+		ParentArrayHandle->DeleteItem(PoolHandle->GetIndexInArray());
+	}
+}
+
+void FHordeLootPoolCustomization::RefreshDelegate()
+{
+	if (Builder)
+	{
+		Builder->ForceRefreshDetails();
+	}
+}
+
 #undef LOCTEXT_NAMESPACE
-#undef GearColumnsWidth
-#undef RowWidth_Customization

@@ -26,6 +26,7 @@ private:
 	FListItemPoolData* SelectedItemPool;
 
 	void CreateItemPoolUIHelper(FDetailWidgetRow& GearsSetup, FText Label, TSharedRef<IPropertyHandle> GearHandle);
+	void CreateItemPoolUIHelper2(FDetailWidgetRow& GearsSetup, FText Label, TSharedRef<IPropertyHandle> GearHandle);
 	void CreateItemPoolUIDelegate(TSharedRef<IPropertyHandle> PropertyHandle, int32 ItemPoolIndex, IDetailChildrenBuilder& ChildrenBuilder);
 	
 	void BuildColumnsHeaderHelper(TSharedRef<IPropertyHandle> StructPropertyHandle, FDetailWidgetRow & GearsSetup);

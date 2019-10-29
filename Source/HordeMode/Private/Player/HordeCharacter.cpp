@@ -557,13 +557,13 @@ void AHordeCharacter::InspectActor()
 			// Weapon
 			if (Cast<AHordeLootWeapon>(InspectedLoot)->GetWeaponClass() != nullptr)
 			{
-				AHordeWeapon* NewWeapon = Cast<AHordeLootWeapon>(InspectedLoot)->GetWeaponClass();
-				if (NewWeapon)
-				{
-					NewWeapon->GetWeaponStats();
-					FPartDeltaData WeaponStatCard = NewWeapon->GetWeaponStats();
-					GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("Damage: %f"), WeaponStatCard.Damage));
-				}
+				//AHordeWeapon* NewWeapon = Cast<AHordeLootWeapon>(InspectedLoot)->GetWeaponClass();
+				//if (NewWeapon)
+				//{
+				//	NewWeapon->GetWeaponStats();
+				//	FPartDeltaData WeaponStatCard = NewWeapon->GetWeaponStats();
+				//	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("Damage: %f"), WeaponStatCard.Damage));
+				//}
 			}
 		}
 
@@ -642,20 +642,20 @@ void AHordeCharacter::EquipInspectedLoot()
 			const int32 CurrentWeaponIdx = Inventory.IndexOfByKey(CurrentWeapon);
 
 			// Spawn new weapon
-			AHordeWeapon* NewWeapon = Cast<AHordeLootWeapon>(InspectedLoot)->GetWeaponClass();
-			if (NewWeapon)
-			{	
-				NewWeapon->OnEnterInventory(this);
+			//AHordeWeapon* NewWeapon = Cast<AHordeLootWeapon>(InspectedLoot)->GetWeaponClass();
+			//if (NewWeapon)
+			//{	
+			//	NewWeapon->OnEnterInventory(this);
 
-				// Equip new weapon
-				EquipWeapon(NewWeapon, true);
+			//	// Equip new weapon
+			//	EquipWeapon(NewWeapon, true);
 
-				// Drop current weapon
-				MulticastThrowWeaponLoot(InspectedLoot);
+			//	// Drop current weapon
+			//	MulticastThrowWeaponLoot(InspectedLoot);
 
-				// Replace current weapon inventory
-				Inventory[CurrentWeaponIdx] = NewWeapon;
-			}
+			//	// Replace current weapon inventory
+			//	Inventory[CurrentWeaponIdx] = NewWeapon;
+			//}
 		}
 
 		// TODO: Vacuum
