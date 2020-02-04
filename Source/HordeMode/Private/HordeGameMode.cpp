@@ -139,15 +139,15 @@ void AHordeGameMode::StartPlay()
 {
 	Super::StartPlay();
 
-	PrepareForNextWave();
+	//PrepareForNextWave();
 }
 
 void AHordeGameMode::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	CheckWaveState();
-	CheckAnyPlayerAlive();
+	//CheckWaveState();
+	//CheckAnyPlayerAlive();
 }
 
 void AHordeGameMode::SpawnBotTimerElapsed()

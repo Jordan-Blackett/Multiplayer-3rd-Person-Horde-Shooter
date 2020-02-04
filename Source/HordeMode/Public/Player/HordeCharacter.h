@@ -108,10 +108,10 @@ protected:
 
 	void EndZoom();
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, ReplicatedUsing = OnRep_CurrentWeapon)
 	AHordeWeapon* CurrentWeapon;
 
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	AHordeWeapon* PreviousWeapon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
@@ -280,5 +280,13 @@ protected:
 
 	/** Builds list of points to check for pausing replication for a connection*/
 	//void BuildPauseReplicationCheckPoints(TArray<FVector>& RelevancyCheckPoints);
+
+	bool EnemyHealthHUD = false;
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "HUD")
+	void ShowEnemyHealthHUD(UHordeHealthComponent* EnemyHealthComp);
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "HUD")
+	void HideEnemyHealthHUD();
 
 };

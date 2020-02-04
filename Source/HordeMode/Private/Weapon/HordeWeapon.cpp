@@ -32,8 +32,6 @@ AHordeWeapon::AHordeWeapon()
 	GripMeshComp->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Block);
 	GripMeshComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
-
-
 	BaseMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BaseMeshComp"));
 	BaseMeshComp->SetupAttachment(GripMeshComp, "BaseSocket");
 	//MeshComp->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
@@ -162,7 +160,7 @@ void AHordeWeapon::OnEquipFinished()
 		}
 
 		SetReticleWidgetVisibility(true);
-		OnAmmoChanged.Broadcast(CurrentAmmo, 0, CurrentAmmoInClip, WeaponConfig.AmmoPerClip);
+		//OnAmmoChanged.Broadcast(MyPawn->GetCurrentAmmo(GetAmmoType()), MyPawn->GetMaxAmmo(GetAmmoType()), CurrentAmmoInClip, WeaponConfig.AmmoPerClip);
 	}
 }
 
@@ -206,7 +204,7 @@ void AHordeWeapon::OnEnterInventory(AHordeCharacter* NewOwner)
 			if(ReticleWidget)
 			{
 				ReticleWidget->AddToViewport();
-				ReticleWidget->SetVisibility(ESlateVisibility::Hidden);		
+				ReticleWidget->SetVisibility(ESlateVisibility::Hidden);	
 			}
 		}
 	}
@@ -234,7 +232,7 @@ void AHordeWeapon::AttachMeshToPawn()
 
 		// For locally controller players we attach both weapons and let the bOnlyOwnerSee, bOwnerNoSee flags deal with visibility.
 		FName AttachPoint = MyPawn->GetWeaponAttachPoint();
-		if (MyPawn->IsLocallyControlled() == true)
+		if (MyPawn->IsLocallyControlled())
 		{
 			USkeletalMeshComponent* PawnMesh = MyPawn->GetMesh();
 			BaseMeshComp->SetHiddenInGame(false);
@@ -450,6 +448,7 @@ void AHordeWeapon::OnRep_Reload()
 
 void AHordeWeapon::SimulateWeaponFire()
 {
+	//TODO: REMOVe
 	bool burst = ((!WeaponConfig.BurstMode) || (BurstFireCounter >= WeaponConfig.NumOfBurstShots));
 	if (Role == ROLE_Authority && CurrentState != EWeaponState::Firing && burst)
 	{
@@ -558,12 +557,14 @@ void AHordeWeapon::HandleFiring()
 			// BurstFire
 			if (WeaponConfig.BurstMode)
 			{
+				BurstInProgress = true;
 				BurstFireCounter++;
-				if (BurstFireCounter < WeaponConfig.NumOfBurstShots)
+				if (BurstFireCounter < WeaponConfig.NumOfBurstShots && CurrentAmmoInClip > 0)
 				{
 					GetWorldTimerManager().SetTimer(TimerHandle_HandleFiring, this, &AHordeWeapon::HandleFiring, WeaponConfig.TimeBetweenBurstShots, false);
 				}
 				else {
+					BurstInProgress = false;
 					BurstFireCounter = 0;
 				}
 			}
@@ -572,7 +573,6 @@ void AHordeWeapon::HandleFiring()
 	else if (CanReload())
 	{
 		StartReload();
-		BurstFireCounter = 0;
 	}
 	// Out of ammo
 	else if (MyPawn && MyPawn->IsLocallyControlled())
@@ -593,8 +593,6 @@ void AHordeWeapon::HandleFiring()
 		{
 			OnBurstFinished();
 		}
-
-		BurstFireCounter = 0;
 	}
 
 	if (MyPawn && MyPawn->IsLocallyControlled())
@@ -609,16 +607,21 @@ void AHordeWeapon::HandleFiring()
 		if (CurrentAmmoInClip <= 0 && CanReload())
 		{
 			StartReload();
-			BurstFireCounter = 0;
+			//BurstFireCounter = 0;
 		}
 
 		// setup refire timer
-		bool burst = ((!WeaponConfig.BurstMode) || (BurstFireCounter >= WeaponConfig.NumOfBurstShots));
+		bool burst = ((!WeaponConfig.BurstMode) || (BurstFireCounter == 0));
 		bRefiring = (CurrentState == EWeaponState::Firing && WeaponConfig.TimeBetweenShots > 0.0f && burst);
 		if (bRefiring)
 		{
 			GetWorldTimerManager().SetTimer(TimerHandle_HandleFiring, this, &AHordeWeapon::HandleFiring, WeaponConfig.TimeBetweenShots, false);
-			BurstFireCounter = 0;
+			//BurstFireCounter = 0;
+		}
+
+		if (!BurstInProgress)
+		{
+			DetermineWeaponState();
 		}
 	}
 
@@ -687,24 +690,20 @@ void AHordeWeapon::DetermineWeaponState()
 {
 	EWeaponState::Type NewState = EWeaponState::Idle;
 
-	bIsEquipped = true; // REMOVE
-	if (bIsEquipped)
+	if (bPendingReload)
 	{
-		if (bPendingReload)
+		if (CanReload() == false)
 		{
-			if (CanReload() == false)
-			{
-				NewState = CurrentState;
-			}
-			else
-			{
-				NewState = EWeaponState::Reloading;
-			}
+			NewState = CurrentState;
 		}
-		else if ((bPendingReload == false) && (bWantsToFire == true) && (CanFire() == true))
+		else
 		{
-			NewState = EWeaponState::Firing;
+			NewState = EWeaponState::Reloading;
 		}
+	}
+	else if ((bPendingReload == false) && (bWantsToFire == true || BurstInProgress) && (CanFire() == true))
+	{
+		NewState = EWeaponState::Firing;
 	}
 	else if (bPendingEquip)
 	{
@@ -718,7 +717,7 @@ void AHordeWeapon::SetWeaponState(EWeaponState::Type NewState)
 {
 	const EWeaponState::Type PrevState = CurrentState;
 
-	if (PrevState == EWeaponState::Firing && NewState != EWeaponState::Firing)
+	if (PrevState == EWeaponState::Firing && NewState != EWeaponState::Firing) //&& !WeaponConfig.BurstMode
 	{
 		OnBurstFinished();
 	}
@@ -748,7 +747,7 @@ void AHordeWeapon::OnBurstStarted()
 
 void AHordeWeapon::OnBurstFinished()
 {
-	bool burst = ((!WeaponConfig.BurstMode) || (BurstFireCounter >= WeaponConfig.NumOfBurstShots));
+	bool burst = (BurstFireCounter == 0);
 	if (burst)
 	{
 		// stop firing FX on remote clients

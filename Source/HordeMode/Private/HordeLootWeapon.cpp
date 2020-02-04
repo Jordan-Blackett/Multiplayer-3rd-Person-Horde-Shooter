@@ -4,6 +4,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
+#include "Components/WidgetComponent.h"
 #include "HordeWeapon.h"
 
 AHordeLootWeapon::AHordeLootWeapon()
@@ -19,6 +20,9 @@ AHordeLootWeapon::AHordeLootWeapon()
 
 	StockMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("StockMeshComp"));
 	StockMeshComp->SetupAttachment(BaseMeshComp, "StockSocket");
+
+	ItemStatCardComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("ItemStatCardComp"));
+	ItemStatCardComp->SetupAttachment(SphereComp);
 }
 
 void AHordeLootWeapon::AddImpluse(FVector impluse)
@@ -26,10 +30,10 @@ void AHordeLootWeapon::AddImpluse(FVector impluse)
 	SphereComp->AddImpulse(impluse * SphereComp->GetMass());
 }
 
-void AHordeLootWeapon::BeginPlay()
-{
-	AHordeLoot::BeginPlay();
-}
+//void AHordeLootWeapon::BeginPlay()
+//{
+//	AHordeLoot::BeginPlay();
+//}
 
 void AHordeLootWeapon::NotifyActorBeginOverlap(AActor * OtherActor)
 {

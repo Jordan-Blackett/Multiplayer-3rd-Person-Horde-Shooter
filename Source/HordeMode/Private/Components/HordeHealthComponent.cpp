@@ -49,7 +49,7 @@ void UHordeHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Dama
 		return;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("Damage %s"), *FString::SanitizeFloat(Damage));
+	//UE_LOG(LogTemp, Log, TEXT("Damage %s"), *FString::SanitizeFloat(Damage));
 	//if (IsFriendly(DamagedActor, DamageCauser))
 	//{
 	//	return;
@@ -58,7 +58,7 @@ void UHordeHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Dama
 	// Update health clamped
 	Health = FMath::Clamp(Health - Damage, 0.0f, DefaultHealth);
 
-	UE_LOG(LogTemp, Log, TEXT("Health Changed: %s"), *FString::SanitizeFloat(Health));
+	//UE_LOG(LogTemp, Log, TEXT("Health Changed: %s"), *FString::SanitizeFloat(Health));
 
 	bIsDead = Health <= 0.0f;
 
@@ -74,6 +74,37 @@ void UHordeHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Dama
 	}
 }
 
+//void UHordeHealthComponent::FloatingDamageText(float Damage, bool DamageType)
+//{
+//	if (FloatingDamageTextWidgetTemplate != nullptr)
+//	{
+//		UParagonWidget_FloatingDamageText* FloatingText = CreateWidget<UParagonWidget_FloatingDamageText>(GetWorld(), FloatingDamageTextWidgetTemplate);
+//		if (FloatingText) {
+//			FloatingText->SetDamageValue(FMath::RoundToInt(Damage));
+//			FloatingText->DamageType(DamageType);
+//
+//			// Get hit position to screen
+//			APlayerController* PlayerController = GEngine->GetFirstLocalPlayerController(GetWorld());
+//			//const APlayerController* const PlayerController = Cast<const APlayerController>(GetController());
+//
+//			if (PlayerController)
+//			{
+//				FVector2D ScreenLocation; //PlayerController->GetPawn()->GetActorLocation()
+//				PlayerController->ProjectWorldLocationToScreen(GetActorLocation(), ScreenLocation);
+//
+//				int32 ScreenWidth = 0;
+//				int32 ScreenHeight = 0;
+//				PlayerController->GetViewportSize(ScreenWidth, ScreenHeight);
+//
+//				FloatingText->SetInitialScreenLocation(ScreenLocation);
+//			}
+//
+//			FloatingText->Init();
+//			FloatingText->AddToViewport();
+//		}
+//	}
+//}
+
 void UHordeHealthComponent::Heal(float HealAmount)
 {
 	if (HealAmount <= 0.0f || Health <= 0.0f)
@@ -83,7 +114,7 @@ void UHordeHealthComponent::Heal(float HealAmount)
 
 	Health = FMath::Clamp(Health + HealAmount, 0.0f, DefaultHealth);
 
-	UE_LOG(LogTemp, Log, TEXT("Health Changed: %s (+%s)"), *FString::SanitizeFloat(Health), *FString::SanitizeFloat(HealAmount));
+	//UE_LOG(LogTemp, Log, TEXT("Health Changed: %s (+%s)"), *FString::SanitizeFloat(Health), *FString::SanitizeFloat(HealAmount));
 
 	OnHealthChanged.Broadcast(this, Health, -HealAmount, nullptr, nullptr, nullptr);
 }

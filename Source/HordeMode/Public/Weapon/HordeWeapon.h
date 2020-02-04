@@ -159,6 +159,8 @@ protected:
 	
 	//FPartDeltaData* WeaponStatCard;
 
+	bool BurstInProgress;
+
 	//////////////////////////////////////////////////////////////////////////
 	// Effects ///////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
@@ -562,5 +564,11 @@ public:
 	virtual void SetCurrentSpread(float spread);
 
 	void SetReticleWidgetVisibility(bool hidden);
+
+	/** query ammo type */
+	EAmmoType GetAmmoType1() const
+	{
+		return GetAmmoType();
+	}
 
 };

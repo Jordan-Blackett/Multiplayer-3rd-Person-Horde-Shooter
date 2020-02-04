@@ -15,6 +15,7 @@
 #include "Public/TimerManager.h"
 #include "Engine/Engine.h"
 #include "DrawDebugHelpers.h"
+#include "AI/HordeAICharacter.h"
 #include "HordeLoot.h"
 #include "HordeLootWeapon.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -62,18 +63,20 @@ void AHordeCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	DefaultFOV = CameraComp->FieldOfView;
+	if (IsLocallyControlled())
+	{
+		DefaultFOV = CameraComp->FieldOfView;
 
-	HealthComp->OnHealthChanged.AddDynamic(this, &AHordeCharacter::OnHealthChanged);
-	//HealthComp->OnHealthChanged.RemoveDynamic(this, &AHordeCharacter::OnHealthChanged);
+		HealthComp->OnHealthChanged.AddDynamic(this, &AHordeCharacter::OnHealthChanged);
+		//HealthComp->OnHealthChanged.RemoveDynamic(this, &AHordeCharacter::OnHealthChanged);
 
+		GetWorld()->GetTimerManager().SetTimer(TraceLineTimerHandle, this, &AHordeCharacter::InspectActor, 0.1f, true);
+	}
 
-
+	// Server Only
 	if (Role == ROLE_Authority)
 	{
 		InitialiseDefaultInventory();
-
-		GetWorld()->GetTimerManager().SetTimer(TraceLineTimerHandle, this, &AHordeCharacter::InspectActor, 0.5f, true);
 	}
 }
 
@@ -336,9 +339,9 @@ void AHordeCharacter::Tick(float DeltaTime)
 
 		// Weapon Stats Card
 		FPartDeltaData WeaponStatCard = CurrentWeapon->GetWeaponStats();
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FString::Printf(TEXT("Damage: %s"), *FString::SanitizeFloat(WeaponStatCard.Damage)));
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FString::Printf(TEXT("Accuracy: %s"), *FString::SanitizeFloat(WeaponStatCard.Accuracy)));
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FString::Printf(TEXT("Damage: %s"), *FString::SanitizeFloat(WeaponStatCard.Damage)));
+		//GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FString::Printf(TEXT("Damage: %s"), *FString::SanitizeFloat(WeaponStatCard.Damage)));
+		//GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FString::Printf(TEXT("Accuracy: %s"), *FString::SanitizeFloat(WeaponStatCard.Accuracy)));
+		//GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Green, FString::Printf(TEXT("Damage: %s"), *FString::SanitizeFloat(WeaponStatCard.Damage)));
 	}
 
 }
@@ -472,21 +475,24 @@ bool AHordeCharacter::ServerEquipWeapon_Validate(AHordeWeapon* Weapon)
 
 void AHordeCharacter::SetCurrentWeapon(AHordeWeapon* NewWeapon, bool NewPickedUpWeapon, AHordeWeapon* CurrentWeapon1)
 {
+	// Server Only
+
 	// Unequip Current Weapon
 	if (CurrentWeapon1)
 	{
 		if (!NewPickedUpWeapon)
 		{
-			// Hide current weapon and place it on the back
-			CurrentWeapon1->OnUnEquip();
-			CurrentWeapon1->OnEquipToPlayerBack();
 			if (PreviousWeapon)
 			{
 				// Hide on back weapon
 				PreviousWeapon->OnUnEquip();
 				PreviousWeapon->OnUnEquipFromPlayerBack();
 			}
-			PreviousWeapon = CurrentWeapon;
+			PreviousWeapon = CurrentWeapon1;
+
+			// Hide current weapon and place it on the back
+			CurrentWeapon1->OnUnEquip();
+			CurrentWeapon1->OnEquipToPlayerBack();
 		}
 		else
 		{
@@ -499,7 +505,11 @@ void AHordeCharacter::SetCurrentWeapon(AHordeWeapon* NewWeapon, bool NewPickedUp
 		CurrentWeapon1->OnAmmoChanged.RemoveDynamic(this, &AHordeCharacter::OnAmmoChangedDelegate);
 	}
 
-	CurrentWeapon = NewWeapon;
+	if (Role == ROLE_Authority)
+	{
+		// Trigger Client Weapon Swap (OnRep)
+		CurrentWeapon = NewWeapon;
+	}
 
 	// Equip new one
 	if (NewWeapon)
@@ -510,12 +520,13 @@ void AHordeCharacter::SetCurrentWeapon(AHordeWeapon* NewWeapon, bool NewPickedUp
 
 		NewWeapon->SetReticleWidgetVisibility(true);
 		NewWeapon->OnAmmoChanged.AddDynamic(this, &AHordeCharacter::OnAmmoChangedDelegate);
+		OnCurrentWeaponAmmoChanged.Broadcast(GetCurrentAmmo(NewWeapon->GetAmmoType1()), NewWeapon->GetMaxAmmo(), NewWeapon->GetCurrentAmmoInClip(), NewWeapon->GetAmmoPerClip());
 	}
 }
 
 void AHordeCharacter::OnRep_CurrentWeapon(AHordeWeapon* LastWeapon)
 {
-	//SetCurrentWeapon(CurrentWeapon, false, LastWeapon);
+	SetCurrentWeapon(CurrentWeapon, false, LastWeapon);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -532,13 +543,11 @@ void AHordeCharacter::InspectActor()
 
 	// Start Trace 
 	FVector StartTrace = FVector::ZeroVector;
-	// Use player's camera
 	FRotator UnusedRot;
 	GetActorEyesViewPoint(StartTrace, UnusedRot);
-	// Adjust trace so there is nothing blocking the ray between the camera and the pawn, and calculate distance from adjusted start
 	StartTrace = StartTrace + AimDir * ((GetActorLocation() - StartTrace) | AimDir);
 
-	const FVector EndTrace = StartTrace + (AimDir * 1000);
+	const FVector EndTrace = StartTrace + (AimDir * 15000);
 
 	//DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::White, false, 0.5f, 0, 2.0f);
 
@@ -547,25 +556,56 @@ void AHordeCharacter::InspectActor()
 	TraceParams.bTraceAsyncScene = true;
 
 	FHitResult Hit(ForceInit);
-	if (GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, COLLISION_LOOT, TraceParams))
+	if (GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_Pawn, TraceParams))
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("The Component Being Hit is: %s"), *Hit.GetComponent()->GetName()));
-
-		InspectedLoot = Cast<AHordeLoot>(Hit.GetActor());
-		if (InspectedLoot)
-		{
-			// Weapon
-			if (Cast<AHordeLootWeapon>(InspectedLoot)->GetWeaponClass() != nullptr)
+		// Enemy
+		AHordeAICharacter* InspectedAICharacter = Cast<AHordeAICharacter>(Hit.GetActor());
+		if (InspectedAICharacter) {
+			if (!EnemyHealthHUD)
 			{
-				//AHordeWeapon* NewWeapon = Cast<AHordeLootWeapon>(InspectedLoot)->GetWeaponClass();
-				//if (NewWeapon)
-				//{
-				//	NewWeapon->GetWeaponStats();
-				//	FPartDeltaData WeaponStatCard = NewWeapon->GetWeaponStats();
-				//	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("Damage: %f"), WeaponStatCard.Damage));
-				//}
+				ShowEnemyHealthHUD(InspectedAICharacter->GetHealthComp());
+				EnemyHealthHUD = true;
+			}
+		} else {
+			if (EnemyHealthHUD)
+			{
+				HideEnemyHealthHUD();
+				EnemyHealthHUD = false;
 			}
 		}
+	}
+
+	//if (GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, COLLISION_LOOT, TraceParams))
+	//{
+	//	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("The Component Being Hit is: %s"), *Hit.GetComponent()->GetName()));
+
+	//	InspectedLoot = Cast<AHordeLoot>(Hit.GetActor());
+	//	if (InspectedLoot)
+	//	{
+	//		// Weapon
+	//		if (Cast<AHordeLootWeapon>(InspectedLoot)->GetWeaponClass() != nullptr)
+	//		{
+	//			//Cast<AHordeLootWeapon>(InspectedLoot)->getdelta
+
+	//			// --- Weapon Stat Card ---
+	//		/*		cahnge stats
+	//			visualable true*/
+
+
+	//			//AHordeWeapon* NewWeapon = Cast<AHordeLootWeapon>(InspectedLoot)->GetWeaponClass();
+	//			//if (NewWeapon)
+	//			//{
+	//			//	NewWeapon->GetWeaponStats();
+	//			//	FPartDeltaData WeaponStatCard = NewWeapon->GetWeaponStats();
+	//			//	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString::Printf(TEXT("Damage: %f"), WeaponStatCard.Damage));
+	//			//}
+	//		}
+
+	//		// Enemy
+	//		{
+	//		
+	//		}
+	//	}
 
 
 		//if (InspectedLoot)
@@ -577,11 +617,11 @@ void AHordeCharacter::InspectActor()
 		//{
 		//	InspectedLoot = nullptr;
 		//}
-	}
-	else
-	{
-		InspectedLoot = nullptr;
-	}
+	//}
+	//else
+	//{
+	//	InspectedLoot = nullptr;
+	//}
 }
 
 void AHordeCharacter::PickUpInspectedLoot()

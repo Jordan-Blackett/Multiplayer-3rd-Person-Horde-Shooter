@@ -111,8 +111,7 @@ void AHordeWeapon_HitScan::ServerNotifyMiss_Implementation(FVector_NetQuantizeNo
 
 	// play FX on remote clients
 	HitNotify.Origin = Origin;
-	HitNotify.RandomSeed = RandomSeed;
-	HitNotify.ReticleSpread = ReticleSpread;
+	HitNotify.TraceDir = ShootDir;
 
 	// play FX locally
 	if (GetNetMode() != NM_DedicatedServer)
@@ -168,8 +167,7 @@ void AHordeWeapon_HitScan::ProcessInstantHit_Confirmed(const FHitResult& Impact,
 	if (Role == ROLE_Authority)
 	{
 		HitNotify.Origin = Origin;
-		HitNotify.RandomSeed = RandomSeed;
-		HitNotify.ReticleSpread = ReticleSpread;
+		HitNotify.TraceDir = ShootDir;
 	}
 
 	// play FX locally
@@ -301,18 +299,13 @@ void AHordeWeapon_HitScan::SetWeaponDeltaStats(FPartDeltaData * Config)
 
 void AHordeWeapon_HitScan::OnRep_HitNotify()
 {
-	SimulateInstantHit(HitNotify.Origin, HitNotify.RandomSeed, HitNotify.ReticleSpread);
+	SimulateInstantHit(HitNotify.Origin, HitNotify.TraceDir);
 }
 
-void AHordeWeapon_HitScan::SimulateInstantHit(const FVector& ShotOrigin, int32 RandomSeed, float ReticleSpread)
+void AHordeWeapon_HitScan::SimulateInstantHit(const FVector& ShotOrigin, FVector TraceDir)
 {
-	FRandomStream WeaponRandomStream(RandomSeed);
-	const float ConeHalfAngle = FMath::DegreesToRadians(ReticleSpread * 0.5f);
-
 	const FVector StartTrace = ShotOrigin;
-	const FVector AimDir = GetAdjustedAim();
-	const FVector ShootDir = WeaponRandomStream.VRandCone(AimDir, ConeHalfAngle, ConeHalfAngle);
-	const FVector EndTrace = StartTrace + (ShootDir * HitScanConfig.WeaponRange);
+	const FVector EndTrace = StartTrace + (TraceDir * HitScanConfig.WeaponRange);
 
 	FHitResult Impact = WeaponTrace(StartTrace, EndTrace);
 	if (Impact.bBlockingHit)

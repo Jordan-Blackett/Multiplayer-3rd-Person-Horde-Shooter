@@ -18,10 +18,7 @@ struct FInstantHitInfo
 	FVector Origin;
 
 	UPROPERTY()
-	float ReticleSpread;
-
-	UPROPERTY()
-	int32 RandomSeed;
+	FVector TraceDir;
 };
 
 USTRUCT()
@@ -171,7 +168,7 @@ protected:
 	void OnRep_HitNotify();
 
 	/** called in network play to do the cosmetic fx  */
-	void SimulateInstantHit(const FVector& Origin, int32 RandomSeed, float ReticleSpread);
+	void SimulateInstantHit(const FVector& Origin, FVector TraceDir);
 
 	/** spawn effects for impact */
 	void SpawnImpactEffects(const FHitResult& Impact);

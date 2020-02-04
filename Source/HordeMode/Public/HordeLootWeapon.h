@@ -8,6 +8,7 @@
 
 class AHordeWeapon;
 class USkeletalMesh;
+class UWidgetComponent;
 
 /**
  * 
@@ -23,7 +24,7 @@ public:
 	void AddImpluse(FVector force);
 protected:
 	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	//virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USkeletalMeshComponent* BaseMeshComp;
@@ -36,6 +37,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USkeletalMeshComponent* GripMeshComp;
+
+	// TODO: move to lootitem.h
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UWidgetComponent* ItemStatCardComp;
 
 	UPROPERTY()
 	TSubclassOf<AHordeWeapon> WeaponClass;
@@ -50,7 +55,7 @@ public:
 	void SetWeaponClass(TSubclassOf<AHordeWeapon> NewWeaponClass);
 
 	//////////////////////////////////////////////////////////////////////////
-	//  Weapon Construction - 
+	//  Weapon Construction
 	void SetWeaponBaseMesh(USkeletalMesh* BaseMesh);
 	void SetWeaponBarrelMesh(USkeletalMesh* BarrelMesh);
 	void SetWeaponStockMesh(USkeletalMesh* StockMesh);

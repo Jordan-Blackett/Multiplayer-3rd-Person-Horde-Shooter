@@ -40,12 +40,12 @@ FORCEINLINE const float operator*(const EWeights& weight, float WeightModifier)
 {
 	float tickets = 0;
 	switch (weight) {
-	case EWeights::ENone: tickets = 0.0f; break;
-	case EWeights::ECommon: tickets = 100.0f; break;
-	case EWeights::EUncommon: tickets = 10.0f; break;
-	case EWeights::ERare: tickets = 1.0f; break;
-	case EWeights::EVeryRare: tickets = 0.1f; break;
-	case EWeights::ELegendary: tickets = 0.01f; break;
+		case EWeights::ENone: tickets = 0.0f; break;
+		case EWeights::ECommon: tickets = 100.0f; break;
+		case EWeights::EUncommon: tickets = 10.0f; break;
+		case EWeights::ERare: tickets = 1.0f; break;
+		case EWeights::EVeryRare: tickets = 0.1f; break;
+		case EWeights::ELegendary: tickets = 0.01f; break;
 	}
 	WeightModifier *= tickets;
 	return WeightModifier;
