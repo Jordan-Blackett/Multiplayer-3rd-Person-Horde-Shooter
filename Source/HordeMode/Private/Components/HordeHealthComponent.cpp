@@ -3,6 +3,7 @@
 #include "HordeHealthComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "HordeGameMode.h"
+#include "Player/HordeCharacter.h"
 
 // Sets default values for this component's properties
 UHordeHealthComponent::UHordeHealthComponent()
@@ -15,7 +16,6 @@ UHordeHealthComponent::UHordeHealthComponent()
 
 	SetIsReplicated(true);
 }
-
 
 // Called when the game starts
 void UHordeHealthComponent::BeginPlay()
@@ -39,6 +39,10 @@ void UHordeHealthComponent::OnRep_Health(float OldHealth)
 {
 	float Damage = Health - OldHealth;
 
+	// Hitmarker?
+
+
+	// HUD
 	OnHealthChanged.Broadcast(this, Health, Damage, nullptr, nullptr, nullptr);
 }
 
@@ -72,6 +76,9 @@ void UHordeHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Dama
 			GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser, InstigatedBy);
 		}
 	}
+
+	// Hitmarker
+	Cast<AHordeCharacter>(DamageCauser)->ClientHitMarker();
 }
 
 //void UHordeHealthComponent::FloatingDamageText(float Damage, bool DamageType)

@@ -298,6 +298,16 @@ int32 AHordeCharacter::GetCurrentAmmo(EAmmoType AmmoType)
 	}
 }
 
+void AHordeCharacter::ClientHitMarker_Implementation()
+{
+	TriggerHitmarker();
+}
+
+bool AHordeCharacter::ClientHitMarker_Validate()
+{
+	return true;
+}
+
 void AHordeCharacter::OnHealthChanged(UHordeHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (Health <= 0.0f && !bDied)
@@ -564,12 +574,14 @@ void AHordeCharacter::InspectActor()
 			if (!EnemyHealthHUD)
 			{
 				ShowEnemyHealthHUD(InspectedAICharacter->GetHealthComp());
+				CurrentWeapon->SetReticleType(ECharacterType::Enemy);
 				EnemyHealthHUD = true;
 			}
 		} else {
 			if (EnemyHealthHUD)
 			{
 				HideEnemyHealthHUD();
+				CurrentWeapon->SetReticleType(ECharacterType::None);
 				EnemyHealthHUD = false;
 			}
 		}

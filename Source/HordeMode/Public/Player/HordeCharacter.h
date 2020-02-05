@@ -16,6 +16,12 @@ enum class EAmmoType : uint8;
 // OnAmmoChanged event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnCurrentWeaponAmmoChangedSignature, int32, ammo, int32, maxAmmo, int32, ammoInClip, int32, ammoPerClip);
 
+enum class ECharacterType : uint8 {
+	None,
+	Ally,
+	Enemy,
+};
+
 UCLASS()
 class HORDEMODE_API AHordeCharacter : public ACharacter
 {
@@ -217,6 +223,12 @@ public:
 	int32 GetMaxAmmo(EAmmoType AmmoType);
 	int32 GetCurrentAmmo(EAmmoType AmmoType);
 
+	// Test 
+	UFUNCTION(unreliable, client, WithValidation)
+	void ClientHitMarker();
+	void ClientHitMarker_Implementation();
+	bool ClientHitMarker_Validate();
+
 protected:
 
 	//////////////////////////////////////////////////////////////////////////
@@ -289,4 +301,6 @@ protected:
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "HUD")
 	void HideEnemyHealthHUD();
 
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "HUD")
+	void TriggerHitmarker();
 };

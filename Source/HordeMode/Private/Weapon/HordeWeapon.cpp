@@ -18,6 +18,8 @@
 #include "Blueprint/UserWidget.h"
 #include "Player/HordePlayerController.h"
 #include "Loot/HordeWeaponPartDataAsset.h"
+#include "Player/HordeCharacter.h"
+#include "Widget/HordeReticleWidget.h"
 
 // Sets default values
 AHordeWeapon::AHordeWeapon()
@@ -200,7 +202,7 @@ void AHordeWeapon::OnEnterInventory(AHordeCharacter* NewOwner)
 	{
 		if (NewOwner->IsLocallyControlled())
 		{
-			ReticleWidget = CreateWidget<UUserWidget>(GetWorld(), ReticleWidgetClass);
+			ReticleWidget = CreateWidget<UHordeReticleWidget>(GetWorld(), ReticleWidgetClass);
 			if(ReticleWidget)
 			{
 				ReticleWidget->AddToViewport();
@@ -1009,6 +1011,22 @@ void AHordeWeapon::SetReticleWidgetVisibility(bool hidden)
 		{
 			ReticleWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
+	}
+}
+
+void AHordeWeapon::SetReticleType(ECharacterType CharacterType)
+{
+	switch (CharacterType)
+	{
+	case ECharacterType::None:
+		ReticleWidget->SetReticleDefault();
+		break;
+	case ECharacterType::Ally:
+		ReticleWidget->SetReticleAlly();
+		break;
+	case ECharacterType::Enemy:
+		ReticleWidget->SetReticleEnemy();
+		break;
 	}
 }
 

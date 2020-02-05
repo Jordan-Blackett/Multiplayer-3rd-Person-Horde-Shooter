@@ -16,9 +16,11 @@ class UAudioComponent;
 class USoundCue;
 class UAnimMontage;
 class UUserWidget;
+class UHordeReticleWidget;
 
 class USkeletalMesh;
 struct FPartDeltaData;
+enum class ECharacterType : uint8;
 
 // OnAmmoChanged event - TODO: remove and just call pawn->nNotifyOutOfAmmo
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnAmmoChangedSignature, int32, ammo, int32, maxAmmo, int32, ammoInClip, int32, ammoPerClip);
@@ -191,11 +193,11 @@ protected:
 
 	// Reticle UMG Widget
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
-	TSubclassOf<UUserWidget> ReticleWidgetClass;
+	TSubclassOf<UHordeReticleWidget> ReticleWidgetClass;
 
 	// Reference to created user widget*/
 	UPROPERTY(Transient)
-	class UUserWidget* ReticleWidget;
+	class UHordeReticleWidget* ReticleWidget;
 
 	//////////////////////////////////////////////////////////////////////////
 	// Sound /////////////////////////////////////////////////////////////////
@@ -565,10 +567,11 @@ public:
 
 	void SetReticleWidgetVisibility(bool hidden);
 
+	void SetReticleType(ECharacterType CharacterType);
+
 	/** query ammo type */
 	EAmmoType GetAmmoType1() const
 	{
 		return GetAmmoType();
 	}
-
 };
